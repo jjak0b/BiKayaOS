@@ -1,7 +1,21 @@
 #ifndef __TERMINAL_H__
 #define __TERMINAL_H__
 
-void term_puts(const char *str);
+#include "device.h"
+
+#define TERMINAL_STATUS_TRANSMITTED     5
+#define TERMINAL_STATUS_RECEIVED TERMINAL_STATUS_TRANSMITTED
+
+#define TERMINAL_CMD_TRANSMIT       2    
+#define TERMINAL_CMD_RECEIVE TERMINAL_CMD_TRANSMIT
+
+#define CHAR_OFFSET        8
+#define TERMINAL_STATUS_MASK   0xFF
+#define TERMINAL_DATA_MASK   0xFF00
+
+#define EOL '\n'
+
+void terminal_puts(termreg_t *device, const char *str);
 
 /**
  * @brief Riempie il buffer assegnato con un carattere presente in input sul terminale
@@ -10,7 +24,7 @@ void term_puts(const char *str);
  * 			0 se l'esecuzione è andata a buon fine
  * 			-1 altrimenti
  */
-int term_getchar( char *str );
+int terminal_getchar(termreg_t *device, char *str );
 
 /**
  * @brief Riempie il buffer con una stringa C,
@@ -24,5 +38,5 @@ int term_getchar( char *str );
  * 			1	se avanza dell'input che il buffer non riesce a contenere -> richiamare nuovamente la funzione per continuare
  * 			-1	se è avvenuto un errore
  */
-int term_gets(char *str_buffer, int size_str, int *length_str );
+int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str, unsigned int *length_str );
 #endif

@@ -24,7 +24,7 @@ VPATH = $(UARM_DIR)
 
 all : kernel
 
-kernel : main.o terminal.o crtso.o libuarm.o
+kernel : device.o terminal.o printer.o main.o crtso.o libuarm.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean:
