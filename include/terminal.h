@@ -15,6 +15,12 @@
 
 #define EOL '\n'
 
+/**
+ * @brief stampa sul terminale fornito una stringa C
+ * 
+ * @param device 
+ * @param str 
+ */
 void terminal_puts(termreg_t *device, const char *str);
 
 /**
@@ -28,7 +34,8 @@ int terminal_getchar(termreg_t *device, char *str );
 
 /**
  * @brief Riempie il buffer con una stringa C,
- * 			fornendone la lunghezza
+ * 			leggendo dal terminale fornito fino all'ultimo carattere prima del '\n'
+ * 			fornendone la lunghezza in length_str
  * 			restituisce un intero indicandone lo stato dell'esecuzione
  * @param str_buffer 
  * @param size_str 

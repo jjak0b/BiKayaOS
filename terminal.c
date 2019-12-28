@@ -46,14 +46,17 @@ int terminal_getchar(termreg_t *device, char *str ){
     if (stat != DEV_STATUS_READY && stat != TERMINAL_STATUS_RECEIVED )
         return -1;
 
+    // invio comando per far scrivere il carattere inserito sul buffer
     device->recv_command = TERMINAL_CMD_RECEIVE;
 
+    // attendo che elabori la richiesta
     while ((stat = rx_status(device)) == DEV_STATUS_BUSY )
         ;
 
+    // leggo il carattere scritto sul buffer di input
     *str = rx_data( device );
 
-    device->recv_command = DEV_CMD_ACK;
+    device->recv_command = DEV_CMD_ACK; // rendo disponibile il device
 
     if (stat != TERMINAL_STATUS_RECEIVED)
         return -1;
@@ -70,6 +73,8 @@ int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str, un
 
     if ( size_str > 0 ){
         size_str -= 1; // riservato per CHAR fine stringa
+        // continua a riempire il buffer finchè c'è spazio, non sono avvenuti errori e finchè non trova '\n'
+        // se non c'è più spazio sul buffer fornito lo indica del flag di ritorno
         while( flag_continue && !status && length < size_str ){
             status = terminal_getchar( device, str_buffer );
             if( !status ){
