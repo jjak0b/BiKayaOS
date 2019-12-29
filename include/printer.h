@@ -12,6 +12,6 @@
  * @param device 
  * @param str 
  */
-void printer_puts( dtpreg_t *device, const char *str );
+int printer_puts( dtpreg_t *device, const char *str );
 
 #endif

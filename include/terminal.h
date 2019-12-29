@@ -39,11 +39,10 @@ int terminal_getchar(termreg_t *device, char *str );
  * 			restituisce un intero indicandone lo stato dell'esecuzione
  * @param str_buffer 
  * @param size_str 
- * @param length_str 
  * @return int 
  * 			0	se una stringa intera è stata memorizzata nel buffer
  * 			1	se avanza dell'input che il buffer non riesce a contenere -> richiamare nuovamente la funzione per continuare
  * 			-1	se è avvenuto un errore
  */
-int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str, unsigned int *length_str );
+int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str);
 #endif

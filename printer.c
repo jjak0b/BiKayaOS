@@ -3,7 +3,7 @@
 #include "system.h"
 
 /**
- * @brief Imvia alla stampante un carattere da stampare
+ * @brief Invia alla stampante un carattere da stampare
  * 
  * @param device 
  * @param ch 
@@ -17,15 +17,15 @@ int printer_putchar( dtpreg_t *device, char ch ){
         return -1;
     }
 
-    // imposto il dato da inviare e mando il comando di stampa
+    /* imposto il dato da inviare e mando il comando di stampa */
 	device->data0 = (word)ch;
 	Dev_SetCommand( (devreg_t*)device, PRINTER_CMD_PRINT );
 	
-    // attendo che elabori la richiesta
+    /* attendo che elabori la richiesta */
     while ( (stat = Dev_GetStatus( (devreg_t*)device, DEV_FULL_MASK ) ) == DEV_STATUS_BUSY )
         ;
 
-	Dev_SetCommand( (devreg_t*)device, DEV_CMD_ACK ); // ok ha finito, la rendo disponibile
+	Dev_SetCommand( (devreg_t*)device, DEV_CMD_ACK ); /* ok ha finito, la rendo disponibile*/
 
     if (stat == PRINTER_STATUS_PRINT_ERROR )
         return -1;
@@ -33,11 +33,11 @@ int printer_putchar( dtpreg_t *device, char ch ){
         return 0;
 }
 
-void printer_puts( dtpreg_t *device, const char *str ){
-	bool flag_continue = true;
-	while( flag_continue && str != NULL && *str != '\0' ){
-		if( printer_putchar( device, *str++ ) ){
-			flag_continue = false;
-		}
-	}
+int printer_puts(dtpreg_t *device, const char *str){
+    int status = 0;
+    
+	while(str != NULL && *str != '\0' && !status){
+        status = printer_putchar(device,*str++);
+    }
+    return status;
 }
