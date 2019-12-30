@@ -1,3 +1,4 @@
+# Credit to Marco Maldini
 # Cross toolchain variables
 # If these are not in your path, you can make them absolute.
 XT_PRG_PREFIX = arm-none-eabi-

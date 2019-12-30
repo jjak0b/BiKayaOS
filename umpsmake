@@ -1,3 +1,4 @@
+# Credit to Marco Maldini
 # Cross toolchain variables
 # If these are not in your path, you can make them absolute.
 XT_PRG_PREFIX = mipsel-linux-gnu-
@@ -31,7 +32,7 @@ kernel : device.o terminal.o printer.o main.o crtso.o libumps.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
-	-rm -f bikaya/*.o bikaya/pcb/*.o bikaya/asl/*.o kernel kernel.*.umps *.o umps/*.o
+	-rm -f kernel kernel.*.umps *.o umps/*.o
 
 # Pattern rule for assembly modules
 %.o : %.S
