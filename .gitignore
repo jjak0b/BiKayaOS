@@ -1,0 +1,6 @@
+*.o
+*.umps
+*.uarm
+*.config
+kernel
+[.]vscode/*
