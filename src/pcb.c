@@ -6,6 +6,7 @@ static struct list_head pcbFree_h;
 
 void initPcbs(void){
     static pcb_t pcbFree_table[ MAXPROC ];
+    INIT_LIST_HEAD( &pcbFree_h );
     int i;
     for( i = 0; i < MAXPROC; i++ ){
         pcb_t *item = &( pcbFree_table[i] );
