@@ -128,11 +128,12 @@ int emptyChild(pcb_t *this) {
 }
 
 /*  Inserisce il PCB puntato da 'p'
-come figlio del PCB puntato da 'prnt' */
+come figlio del PCB puntato da 'prnt'.
+L'ordinamento segue quello dei numeri di priorità */
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
 	
-	list_add_tail( &p->p_sib, &prnt->p_child );
+	insertProcQ( &prnt->p_child, &p->p_sib );
 	
 	p->p_parent = prnt;
 }
