@@ -4,6 +4,8 @@
 
 static struct list_head pcbFree_h;
 
+/* PCB FREE LIST HANDLING */
+
 void initPcbs(void){
     static pcb_t pcbFree_table[ MAXPROC ];
     INIT_LIST_HEAD( &pcbFree_h );
@@ -36,6 +38,8 @@ pcb_t *allocPcb(void){
     }
     return new;
 }
+
+/* PCB QUEUE HANDLING */
 
 void mkEmptyProcQ(struct list_head *head){
     INIT_LIST_HEAD(head);
@@ -120,26 +124,18 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
 
 /* PCB TREE HANDLING */
 
-/* Se il PCB puntato da 'this' non ha figli, ritorna TRUE */
-
 int emptyChild(pcb_t *this) {
 	
 	return list_empty( &this->p_child ); 
 }
 
-/*  Inserisce il PCB puntato da 'p'
-come figlio del PCB puntato da 'prnt'.
-L'ordinamento segue quello dei numeri di priorità */
-
 void insertChild(pcb_t *prnt, pcb_t *p) {
 	
+	/* Il nodo viene inserito in base al numero di priorità */
 	insertProcQ( &prnt->p_child, &p->p_sib );
 	
 	p->p_parent = prnt;
 }
-
-/* Rimuove il primo figlio del PCB puntato da 'p'.
-Se 'p' non ha figli, restituisce 'NULL' */
 
 pcb_t *removeChild(pcb_t *p) {
 	
@@ -157,10 +153,6 @@ pcb_t *removeChild(pcb_t *p) {
 		return removedChild;
 	}
 }
-
-/* Rimuove il PCB puntato da 'p' dalla lista dei figli del padre.
-Se il PCB puntato da 'p' non ha un padre, restituisce 'NULL'.
-Altrimenti restituisce 'p'. */
 
 pcb_t *outChild(pcb_t *p) {
 	
