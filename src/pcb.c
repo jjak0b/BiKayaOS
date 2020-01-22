@@ -142,7 +142,7 @@ pcb_t *removeChild(pcb_t *p) {
 		return NULL;
 	else {
 		/* Rimozione del primo nodo */
-		pcb_t *removedChild = container_of( p, pcb_t*, child );
+		pcb_t *removedChild = container_of( p->p_child.next, pcb_t, p_sib );
 		list_del( &removedChild->p_sib );
 		
 		/* Reset dei puntatori del nodo rimosso */
@@ -155,7 +155,7 @@ pcb_t *removeChild(pcb_t *p) {
 
 pcb_t *outChild(pcb_t *p) {
 	
-	if ( p->p_parent ) {
+	if ( p->p_parent != NULL ) {
 		/* Rimozione di 'p' dalla lista */
 		list_del( &p->p_sib );
 		
