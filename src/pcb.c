@@ -131,8 +131,8 @@ int emptyChild(pcb_t *this) {
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
 	
-	/* Inserirsce 'p' in testa alla lista dei figli di 'prnt' */
-	list_add( &p->p_sib, &prnt->p_child );
+	/* Inserirsce 'p' in coda alla lista dei figli di 'prnt' */
+	list_add_tail( &p->p_sib, &prnt->p_child );
 	p->p_parent = prnt;
 }
 
