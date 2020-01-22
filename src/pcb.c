@@ -117,3 +117,61 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
     }
     return item;
 }
+
+/* PCB TREE HANDLING */
+
+/* Se il PCB puntato da 'this' non ha figli, ritorna TRUE */
+
+int emptyChild(pcb_t *this) {
+	
+	return list_empty( &this->p_child ); 
+}
+
+/*  Inserisce il PCB puntato da 'p'
+come figlio del PCB puntato da 'prnt' */
+
+void insertChild(pcb_t *prnt, pcb_t *p) {
+	
+	list_add_tail( &p->p_sib, &prnt->p_child );
+	
+	p->p_parent = prnt;
+}
+
+/* Rimuove il primo figlio del PCB puntato da 'p'.
+Se 'p' non ha figli, restituisce 'NULL' */
+
+pcb_t *removeChild(pcb_t *p) {
+	
+	if ( emptyChild( p ) )
+		return NULL;
+	else {
+		/* Rimozione del primo nodo */
+		pcb_t *removedChild = &p->child;
+		list_del( &removedChild->p_sib );
+		
+		/* Reset dei puntatori del nodo rimosso */
+		removedChild->p_parent = NULL;
+		INIT_LIST_HEAD( &removedChild->p_sib );
+		
+		return removedChild;
+	}
+}
+
+/* Rimuove il PCB puntato da 'p' dalla lista dei figli del padre.
+Se il PCB puntato da 'p' non ha un padre, restituisce 'NULL'.
+Altrimenti restituisce 'p'. */
+
+pcb_t *outChild(pcb_t *p) {
+	
+	if ( p->p_parent ) {
+		/* Rimozione di 'p' dalla lista */
+		list_del( &p->p_sib );
+		
+		/* Reset dei puntatori di 'p' */
+		p->p_parent = NULL;
+		INIT_LIST_HEAD( &p->p_sib );
+		
+		return p;
+	}
+	else return NULL;
+}
