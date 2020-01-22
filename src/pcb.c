@@ -14,17 +14,12 @@ void initPcbs(void){
         pcb_t *item = &( pcbFree_table[i] );
         item->p_parent = NULL;
         INIT_LIST_HEAD( &item->p_next );
-        INIT_LIST_HEAD( &item->p_child );
-        INIT_LIST_HEAD( &item->p_sib );
-        item->priority = 0;
-        item->p_semkey = NULL;
-        item->p_s = {0};
-
         list_add( &item->p_next, &pcbFree_h );
     }
 }
 
 void freePcb(pcb_t *p){
+    INIT_LIST_HEAD( &p->p_next );
     list_add( &p->p_next, &pcbFree_h );
 }
 
@@ -50,6 +45,8 @@ int emptyProcQ(struct list_head *head){
 }
 
 void insertProcQ(struct list_head *head, pcb_t *p){
+    INIT_LIST_HEAD(&p->p_next);
+
     if( list_empty( head ) ){
         list_add( &p->p_next, head );
     }
@@ -71,7 +68,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
             if( p->priority >= (priority_head / 2) && (priority_head / 2) >= priority_tail ){ 
                 list_for_each( it, head ){
                     item = container_of( it, pcb_t, p_next );
-                    if( p->priority >= item->priority ){
+                    if( p->priority > item->priority ){
                         list_add( &p->p_next, it );
                         break;
                     }
@@ -80,7 +77,7 @@ void insertProcQ(struct list_head *head, pcb_t *p){
             else{
                 list_for_each_prev( it, head ){
                     item = container_of( it, pcb_t, p_next );
-                    if( p->priority >= item->priority ){
+                    if( p->priority > item->priority ){
                         list_add( &p->p_next, it );
                         break;
                     }
@@ -103,6 +100,7 @@ pcb_t *removeProcQ(struct list_head *head){
     pcb_t *item = headProcQ( head );
     if( item != NULL ){
         list_del( head->next );
+        INIT_LIST_HEAD( &item->p_next );
     }
     return item;
 }
@@ -115,6 +113,7 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p){
             if( it == &p->p_next ){
                 item = container_of( it, pcb_t, p_next );
                 list_del( it );
+                INIT_LIST_HEAD( it );
                 break;
             }
         }
@@ -130,14 +129,17 @@ int emptyChild(pcb_t *this) {
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
-	
+    INIT_LIST_HEAD(&p->p_sib);
+    if( emptyChild( prnt ) ){
+        INIT_LIST_HEAD(&prnt->p_child);
+    }
+    
 	/* Inserirsce 'p' in testa alla lista dei figli di 'prnt' */
 	list_add( &p->p_sib, &prnt->p_child );
 	p->p_parent = prnt;
 }
 
 pcb_t *removeChild(pcb_t *p) {
-	
 	if ( emptyChild( p ) )
 		return NULL;
 	else {
