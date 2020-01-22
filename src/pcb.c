@@ -131,9 +131,8 @@ int emptyChild(pcb_t *this) {
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
 	
-	/* Il nodo viene inserito in base al numero di priorità */
-	insertProcQ( &prnt->p_child, &p->p_sib );
-	
+	/* Inserirsce 'p' in testa alla lista dei figli di 'prnt' */
+	list_add( &p->p_sib, &prnt->p_child );
 	p->p_parent = prnt;
 }
 
@@ -143,7 +142,7 @@ pcb_t *removeChild(pcb_t *p) {
 		return NULL;
 	else {
 		/* Rimozione del primo nodo */
-		pcb_t *removedChild = &p->p_child;
+		pcb_t *removedChild = container_of( p, pcb_t*, child );
 		list_del( &removedChild->p_sib );
 		
 		/* Reset dei puntatori del nodo rimosso */
