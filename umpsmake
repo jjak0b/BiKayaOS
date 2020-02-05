@@ -1,0 +1,40 @@
+# Credit to Marco Maldini
+# Cross toolchain variables
+# If these are not in your path, you can make them absolute.
+XT_PRG_PREFIX = mipsel-linux-gnu-
+#XT_PRG_PREFIX = ~/x-tools/mipsel-unknown-linux-gnu/bin/mipsel-unknown-linux-gnu-
+CC = $(XT_PRG_PREFIX)gcc
+LD = $(XT_PRG_PREFIX)ld
+
+# uMPS2-related paths
+UMPS2_DIR = ./umps
+INCLUDE_DIR = ./include
+SOURCE_DIR = ./src
+
+# Compiler options
+CFLAGS_LANG = -ffreestanding -DTARGET_UMPS=1
+CFLAGS_MIPS = -mips1 -mabi=32 -mno-gpopt -G 0 -mno-abicalls -fno-pic -mfp32
+CFLAGS = $(CFLAGS_LANG) $(CFLAGS_MIPS) -I$(UMPS2_DIR) -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/asl -I$(INCLUDE_DIR)/pcb -I$(INCLUDE_DIR)/system -Wall -O0
+
+# Linker options
+LDFLAGS = -G 0 -nostdlib -T $(UMPS2_DIR)/umpscore.ldscript
+
+# Add the location of crt*.S to the search path
+VPATH = $(UMPS2_DIR)
+
+.PHONY : all clean
+
+all : kernel.core.umps
+
+kernel.core.umps : kernel
+	umps2-elf2umps -k $<
+
+kernel : $(SOURCE_DIR)/pcb/pcb.o $(SOURCE_DIR)/asl/asl.o $(SOURCE_DIR)/p1test_bikaya_v0.o crtso.o libumps.o
+	$(LD) -o $@ $^ $(LDFLAGS)
+
+clean :
+	-rm -f kernel kernel.*.umps *.o umps/*.o $(SOURCE_DIR)/*.o $(SOURCE_DIR)/asl/*.o $(SOURCE_DIR)/pcb/*.o
+
+# Pattern rule for assembly modules
+%.o : %.S
+	$(CC) $(CFLAGS) -c -o $@ $<
