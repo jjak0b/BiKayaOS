@@ -4,10 +4,10 @@
 *    Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
 */
 
-#include "pcb.h"
+#include <pcb.h>
 
 #include <types_bikaya.h>
-#include "const.h"
+#include <const.h>
 
 // puntatore alla sentinella della lista pcbFree
 static struct list_head *pcbFree_h;

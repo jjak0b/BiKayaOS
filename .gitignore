@@ -3,4 +3,5 @@
 *.uarm
 *.config
 kernel
+[.]sconsign.dblite
 [.]vscode/*

@@ -4,10 +4,10 @@
 *    Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
 */
 
-#include "asl.h"
-#include "pcb.h"
+#include <asl.h>
+#include <pcb.h>
 
-#include "const.h"
+#include <const.h>
 #include <types_bikaya.h>
 
 // puntatore alla sentinella della lista ASL

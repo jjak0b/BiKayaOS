@@ -13,11 +13,15 @@ Perche' la compilazione vada a buon fine sono necessari i seguenti pacchetti:
 - mipsel-linux-gnu-gcc
 - uarm (per la compilazione su uarm)
 - umps (per la compilazione su umps)
-- make (per utilizzare i makefile)
+- scons (per utilizzare Sconstruct)
+- python (per utilizzare scons)
 
 ## Istruzioni per la compilazione
 
-Sono forniti due makefile per la compilazione, `uarmmake` e `umpsmake`. Invocando `make uarm` o `make umps2` si procede con la compilazione dell'architettura richiesta.
+E' fornito un file chiamato Sconstruct. 
+Digitare 'scons TARGET=uarm' per generare il kernel per architettura uarm.
+Digitare 'scons TARGET=umps' per generare il kernel per architettura umps.
+Digitare 'scons -c' per pulire le directory.
 
 ## Esecuzione (credit to Mattia Maldini)
 
