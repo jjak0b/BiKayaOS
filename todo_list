@@ -17,6 +17,10 @@ mancano i sorgenti della 1.5
 = Ho mantenuto il file p1test per avere in mano un idea di come scrivere il codice (era il """kernel""" di phase1). Ricordiamo di toglierlo prima di consegnare, che non serve +
 
 = Questo file ce lo possiamo tenere qui per scrivere cosa c'è da fare, in modo tale da non pestarci i piedi a vicenda nel lavoro
+
+= Il riferimento (DEFINE SUGLI INDIRIZZI) alle new/old area di uarm è a riga 27 del file uARMconst.h
+= Il riferimento alle new/old area di uarm non sembra esserci nei sorgenti
+
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 By Jacopo:
 
