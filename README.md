@@ -1,6 +1,6 @@
-# Bikaya Phase 1
+# Bikaya Phase 1.5
 
-Il pacchetto scaricato contiene la fase 1 del progetto Bikaya (http://www.cs.unibo.it/~renzo/so/bikaya/phase1_2020.pdf) inerente il corso di Sistemi Operativi per l'AA 2019/2020.
+Il pacchetto scaricato contiene la fase 1.5 del progetto Bikaya (http://www.cs.unibo.it/~renzo/so/bikaya/phase1_2020.pdf) inerente il corso di Sistemi Operativi per l'AA 2019/2020.
 Il pacchetto contiene un programma compilabile sia per l'emulatore uMPS2 (https://github.com/tjonjic/umps) che uARM (https://github.com/mellotanica/uARM). 
 
 L'architettura è configurata tramite metodologia make.

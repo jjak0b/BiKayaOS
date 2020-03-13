@@ -1,4 +1,4 @@
-# SConstruct per compilare BiKayaOS - Phase1
+# SConstruct per compilare BiKayaOS - Phase1.5
 
 
 option_active = ARGUMENTS.get('TARGET', 'help')
