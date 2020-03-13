@@ -1,0 +1,29 @@
+By Ste:
+= Il file SConstruct non è completo. Capiamo prima come strutturare il codice del progetto e poi lo completiamo. Il progetto probabilmente ora non compila perchè 
+mancano i sorgenti della 1.5
+
+= Per ora sono state aggiunte le directory:
+    .include
+        .+ handler
+        .+ interrupts
+        .+ scheduler
+    .src
+        .+ handler
+        .+ interrupts
+        .+ scheduler
+
+= Inoltre è stato aggiunto un file main.c che sarà il core del nostro sistema (entry point per il kernel) PER ORA E' VUOTO
+
+= Ho mantenuto il file p1test per avere in mano un idea di come scrivere il codice (era il """kernel""" di phase1). Ricordiamo di toglierlo prima di consegnare, che non serve +
+
+= Questo file ce lo possiamo tenere qui per scrivere cosa c'è da fare, in modo tale da non pestarci i piedi a vicenda nel lavoro
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+By Jacopo:
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+By Cristiano:
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+By Iacopo:
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

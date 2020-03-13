@@ -1,6 +1,5 @@
 # SConstruct per compilare BiKayaOS - Phase1.5
 
-
 option_active = ARGUMENTS.get('TARGET', 'help')
 
 umps_mode = option_active=='umps'
@@ -13,17 +12,25 @@ if not umps_mode and not uarm_mode and not clean_mode:
     Help("Digita: 'scons -c' per pulire le directory.\n")
     Exit(2)
 
-# Definizione directory INCLUDE
+# Definizione directory INCLUDE (phase 1)
 dir_h       = './include'
 asl_h       = dir_h + '/asl'
 pcb_h       = dir_h + '/pcb'
 system_h    = dir_h + '/system'
 uarm_h      = dir_h + '/uarm'
 umps_h      = dir_h + '/umps'
+# Definizione directory INCLUDE (phase 1.5)
+scheduler_h       = dir_h + '/scheduler'
+handler_h       = dir_h + '/handler'
+interrupts_h    = dir_h + '/interrupts'
 
 PRFX_I = '-I'
+#Lista headers phase 1
 uarm_headers = [PRFX_I+dir_h, PRFX_I+asl_h, PRFX_I+pcb_h, PRFX_I+system_h, PRFX_I+uarm_h]
 umps_headers = [PRFX_I+dir_h, PRFX_I+asl_h, PRFX_I+pcb_h, PRFX_I+system_h, PRFX_I+umps_h]
+#Lista headers phase 1.5
+uarm_headers.extend([PRFX_I+scheduler_h,PRFX_I+handler_h,PRFX_I+interrupts_h])
+umps_headers.extend([PRFX_I+scheduler_h,PRFX_I+handler_h,PRFX_I+interrupts_h])
 
 # Definizione directory uarm e umps (source)
 src     = './src'
@@ -55,10 +62,14 @@ S_EXT='.s'
 C_EXT='.c'
 O_EXT='.o'
 
-## Path sorgenti C
+## Path sorgenti C phase1
 pcb_s = src+'/pcb/pcb'
 asl_s = src+'/asl/asl'
 test_s = src+'/p1test_bikaya_v0'
+## Path sorgenti C phase1.5
+scheduler_s = src+'/scheduler/scheduler'
+interrupts_s = src+'/interrupts/interrupts'
+handler_s = src+'/handler/handler'
 ## Relativi ad UARM
 crtso_uarm = uarm_d+'/crtso'
 libuarm = uarm_d+'/libuarm'
