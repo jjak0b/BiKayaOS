@@ -2,7 +2,7 @@
 #define H_SCHEDULER
 
 #include <pcb.h>
-#include <shared/shared.h>
+#include <shared/types.h>
 
 struct scheduler_t {
 
