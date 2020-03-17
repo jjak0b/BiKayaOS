@@ -1,5 +1,6 @@
 #include "types_bikaya.h"
 
+// TODO SDS SCRIVERE COMMENTI 
 void moveState(state_t *before, state_t *after);
 void initStatusFlag(state_t *state);
 

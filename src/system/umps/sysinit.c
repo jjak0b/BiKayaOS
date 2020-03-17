@@ -15,6 +15,8 @@ void initAreas(void){
 	initTrapArea(area, devregarea);
 	initTLBArea(area, devregarea);
 	initInterruptArea(area, devregarea);
+
+	setTIMER(0);
 }
 
 void initSysCallArea(state_t *area, devregarea_t *devregarea){
@@ -67,7 +69,7 @@ void moveState(state_t *before, state_t *after){
 }
 
 void initStatusFlag(state_t *state){
-	state->status ^= 0;
+	state->status &= 0;
 	state->status |= STATUS_CU0;
 	state->status |= STATUS_BEV;
 	state->status |= STATUS_TE;

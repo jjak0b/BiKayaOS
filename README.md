@@ -25,4 +25,4 @@ Digitare 'scons -c' per pulire le directory.
 
 ## Esecuzione (credit to Mattia Maldini)
 
-Per l'esecuzione di Phase1 fare riferimento ai manuali di uARM e uMPS2, rispettivamente.
+Per l'esecuzione di Phase1.5 fare riferimento ai manuali di uARM e uMPS2, rispettivamente.
