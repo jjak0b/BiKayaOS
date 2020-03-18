@@ -47,11 +47,3 @@ void initTLBArea(state_t *area, devregarea_t *devregarea);
  * devregarea: puntatore alla Bus register area 
  */
 void initInterruptArea(state_t *area, devregarea_t *devregarea);
-
-/**
- * @brief Copia before in after
- * 
- * @param before il processor state da copiare
- * @param after il processor state target
- */
-void moveState(state_t *before, state_t *after);
