@@ -1,4 +1,4 @@
-void sysHandler(void);
-void pgmTrapHandler(void);
-void TLBHandler(void);
-void intHandler(void);
+void Handler_SysCall(void);
+void Handler_Trap(void);
+void Handler_TLB(void);
+void Handler_Interrupt(void);

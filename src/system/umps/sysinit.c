@@ -23,7 +23,7 @@ void initSysCallArea(state_t *area, devregarea_t *devregarea){
 	area = (state_t *)SYSBK_NEWAREA;
 	STST(area);
 
-	area->pc_epc = (memaddr) sysHandler;
+	area->pc_epc = (memaddr) Handler_SysCall;
 	area->reg_sp = devregarea->rambase + devregarea->ramsize; // RAMTOP
 	initStatusFlag(area);
 }
@@ -32,7 +32,7 @@ void initTrapArea(state_t *area, devregarea_t *devregarea){
 	area = (state_t *)PGMTRAP_NEWAREA;
 	moveState(area, (state_t *) PGMTRAP_NEWAREA);
 
-	area->pc_epc = (memaddr) pgmTrapHandler;
+	area->pc_epc = (memaddr) Handler_Trap;
 	area->reg_sp = devregarea->rambase + devregarea->ramsize; // RAMTOP
 	initStatusFlag(area);
 }
@@ -41,7 +41,7 @@ void initTLBArea(state_t *area, devregarea_t *devregarea){
 	area = (state_t *)TLB_NEWAREA;
 	moveState(area, (state_t *) TLB_NEWAREA);
 
-	area->pc_epc = (memaddr) TLBHandler ;
+	area->pc_epc = (memaddr) Handler_TLB ;
 	area->reg_sp = devregarea->rambase + devregarea->ramsize; // RAMTOP
 	initStatusFlag(area);
 }
@@ -50,7 +50,7 @@ void initInterruptArea(state_t *area, devregarea_t *devregarea){
 	area = (state_t *)INT_NEWAREA;
 	moveState(area, (state_t *) INT_NEWAREA);
 
-	area->pc_epc = (memaddr) intHandler;
+	area->pc_epc = (memaddr) Handler_Interrupt;
 	area->reg_sp = devregarea->rambase + devregarea->ramsize; // RAMTOP
 	initStatusFlag(area);
 }
