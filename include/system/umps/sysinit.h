@@ -1,3 +1,6 @@
+#ifndef H_SYSINIT
+#define H_SYSINIT
+
 #include "types_bikaya.h"
 
 /**
@@ -47,3 +50,5 @@ void initTLBArea(state_t *area, devregarea_t *devregarea);
  * devregarea: puntatore alla Bus register area 
  */
 void initInterruptArea(state_t *area, devregarea_t *devregarea);
+
+#endif

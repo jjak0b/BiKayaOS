@@ -1,10 +1,11 @@
-#include "system/umps/sysinit.h"
+#include <system/umps/sysinit.h>
+#include <system/shared/shared.h>
 
-#include "umps/umpsconst.h"
-#include "umps/cp0.h"
-#include "umps/libumps.h"
+#include <umps/umpsconst.h>
+#include <umps/cp0.h>
+#include <umps/libumps.h>
 
-#include "handler/handler.h"
+#include <handler/handler.h>
 
 void initAreas(void){
 	devregarea_t *devregarea; // pointer to Bus register area

@@ -1,16 +1,17 @@
-void sysHandler(void){
+#include <handler/handler.h>
+
+void Handler_SysCall( word sysNum, word arg1, word arg2, word arg3 ) {
 	
 }
 
-
-void pgmTrapHandler(void){
+void Handler_Trap( word arg0, word arg1, word arg2, word arg3 ) {
 	
 }
 
-void TLBHandler(void){
+void Handler_TLB( word arg0, word arg1, word arg2, word arg3 ) {
 
 }
 
-void intHandler(void){
+void Handler_Interrupt( word arg0, word arg1, word arg2, word arg3 ) {
 	
 }

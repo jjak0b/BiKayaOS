@@ -1,3 +1,5 @@
+#ifndef H_SYSTEM_SHARED
+#define H_SYSTEM_SHARED
 /**
  * @brief INTERFACCIA comune ad entrambe le architetture
  * 
@@ -16,3 +18,5 @@
  * @param after il processor state target
  */
 void moveState(state_t *before, state_t *after);
+
+#endif
