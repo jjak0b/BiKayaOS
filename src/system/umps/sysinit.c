@@ -7,16 +7,16 @@
 #include "handler/handler.h"
 
 void initAreas(void){
-	devregarea_t *devregarea;
+	devregarea_t *devregarea; // pointer to Bus register area
 	devregarea = (devregarea_t *) DEV_REG_AREA;
-	state_t *area;										
+	state_t *area = NULL;	// pointer to a processor state area					
 
 	initSysCallArea(area, devregarea);
 	initTrapArea(area, devregarea);
 	initTLBArea(area, devregarea);
 	initInterruptArea(area, devregarea);
 
-	setTIMER(0);
+	setTIMER(0); // set timer of coprocessor 0 (initialized with 0 value)
 }
 
 void initSysCallArea(state_t *area, devregarea_t *devregarea){
@@ -55,6 +55,13 @@ void initInterruptArea(state_t *area, devregarea_t *devregarea){
 	initStatusFlag(area);
 }
 
+void initStatusFlag(state_t *state){
+	state->status &= 0;
+	state->status |= STATUS_BEV;	//Bit 22 of processor state area; related to exception vector
+	state->status |= STATUS_TE;		//Bit 27 of processor state area; related to local timer mask
+	state->status |= STATUS_CU0;	//Bit 28 of processor state area; related to coprocessor usability
+}
+
 void moveState(state_t *before, state_t *after){
 	after->entry_hi = before->entry_hi;
 	after->cause = before->cause;
@@ -66,11 +73,4 @@ void moveState(state_t *before, state_t *after){
 	for(int i=0; i<STATE_GPR_LEN+1;i++){
 		after->gpr[i] = before->gpr[i];		
 	}
-}
-
-void initStatusFlag(state_t *state){
-	state->status &= 0;
-	state->status |= STATUS_CU0;
-	state->status |= STATUS_BEV;
-	state->status |= STATUS_TE;
 }
