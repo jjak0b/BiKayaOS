@@ -11,6 +11,16 @@
 
 #include <system/system.h>
 
+void EnableInterrupts( state_t *state, int b_flag );
+
+void EnableKernelMode( state_t *state, int b_flag );
+
+void EnableVirtualMemory( state_t *state, int b_flag );
+
+void SetPC( state_t *state, memaddr value );
+
+void SetSP( state_t *state, memaddr value );
+
 /**
  * @brief Copia before in after
  * 

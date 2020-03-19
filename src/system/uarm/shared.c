@@ -1,5 +1,41 @@
 #include <system/shared/shared.h>
 
+void EnableInterrupts( state_t *state, int b_flag ) {
+    if( b_flag ){
+        state->cpsr |= STATUS_INT_MODE;
+    }
+    else{
+        state->cpsr &= ~STATUS_INT_MODE;
+    }
+}
+
+void EnableKernelMode( state_t *state, int b_flag ) {
+    if( b_flag ){
+        state->cpsr |= STATUS_SYS_MODE;
+    }
+    else{
+        state->cpsr &= ~STATUS_SYS_MODE;
+        state->cpsr |= STATUS_USER_MODE;
+    }   
+}
+
+void EnableVirtualMemory( state_t *state, int b_flag ) {
+    if( b_flag ){
+        state->CP15_Control = CP15_ENABLE_VM( state->CP15_Control );
+    }
+    else {
+        state->CP15_Control = CP15_DISABLE_VM( state->CP15_Control );
+    }
+}
+
+void SetPC( state_t *state, memaddr value ) {
+    state->pc = value;
+}
+
+void SetSP( state_t *state, memaddr value ) {
+    state->sp = value;
+}
+
 void moveState(state_t *before, state_t *after){
     after->a1 = before->a1;
     after->a2 = before->a2;

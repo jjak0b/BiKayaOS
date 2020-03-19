@@ -16,7 +16,9 @@
 #include "system.h"
 #include "pcb/pcb.h"
 
-struct list_head *ready_queue;
+#include "test.h" /* test fase */
+
+extern struct list_head *ready_queue;
 
 void main(){
 	// Inizialializzazione del sistema
@@ -29,7 +31,7 @@ void main(){
 
 	// TODO:
 	//----------------------------------------------------
-
+	test_init(); /* inserisce le funzioni di test nello scheduler come processi */
 
 	// Halt
 	//----------------------------------------------------

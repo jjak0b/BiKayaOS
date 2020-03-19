@@ -36,6 +36,9 @@ int scheduler_main();
  * @param func 
  * @return int 
  */
-int scheduler_CreateProcess( function_t func );
+int scheduler_CreateProcess( function_t func, int priority );
+
+
+int scheduler_AddProcess( pcb_t *p );
 
 #endif
