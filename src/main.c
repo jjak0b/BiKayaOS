@@ -15,10 +15,9 @@
 
 #include "system.h"
 #include "pcb/pcb.h"
+#include "scheduler/scheduler.h"
 
 #include "test.h" /* test fase */
-
-extern struct list_head *ready_queue;
 
 void main(){
 	// Inizialializzazione del sistema
@@ -27,7 +26,7 @@ void main(){
 	//----------------------------------------------------
 
 	initPcbs();
-	INIT_LIST_HEAD(ready_queue);
+	scheduler_init();	/* Inizializzazione scheduler */
 
 	// TODO:
 	//----------------------------------------------------

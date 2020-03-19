@@ -1,10 +1,11 @@
 #include <scheduler.h>
 
-extern struct list_head *ready_queue;
+static scheduler_t *scheduler;
 
 int scheduler_init() {
-	initPcbs();
-	/* TODO */
+	static scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
+	mkEmptyProcQ( &scheduler_struct.ready_queue );
+	scheduler = &scheduler_struct;
 }
 
 int scheduler_main() {
@@ -19,6 +20,6 @@ int scheduler_CreateProcess( function_t func, int priority ) {
 	/* TODO */
 }
 
-int scheduler_AddProcess( pcb_t *p ){
-	insertProcQ( ready_queue, p );
+int scheduler_AddProcess( pcb_t *p ) {
+	insertProcQ( &scheduler->ready_queue, p );
 }
