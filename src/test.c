@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "shared/types.h"
+#include "utilities/types.h"
 #include "system/shared/shared.h"
 
 #include "scheduler/scheduler.h"

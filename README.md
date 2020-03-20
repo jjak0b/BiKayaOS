@@ -3,7 +3,7 @@
 Il pacchetto scaricato contiene la fase 1.5 del progetto Bikaya (http://www.cs.unibo.it/~renzo/so/bikaya/phase1_2020.pdf) inerente il corso di Sistemi Operativi per l'AA 2019/2020.
 Il pacchetto contiene un programma compilabile sia per l'emulatore uMPS2 (https://github.com/tjonjic/umps) che uARM (https://github.com/mellotanica/uARM). 
 
-L'architettura è configurata tramite metodologia make.
+Può essere compilato sia tramite script scons sia tramite script sh (richiama scons). Ulteriori informazioni nel paragrafo "Istruzioni per la compilazione".
 
 ## Requisiti (credit to Mattia Maldini)
 
@@ -22,6 +22,14 @@ E' fornito un file chiamato Sconstruct.
 Digitare 'scons TARGET=uarm' per generare il kernel per architettura uarm.
 Digitare 'scons TARGET=umps' per generare il kernel per architettura umps.
 Digitare 'scons -c' per pulire le directory.
+
+E' possibile compilare anche utilizzando uno script sh. 
+Posizionarsi nella cartella principale di BiKaya e:
+- digitare "./compile.sh [uarm|UARM]" per genereale il kernel per architettura uarm.
+- digitare "./compile.sh [umps|UMPS]" per genereale il kernel per architettura umps.
+- digitare "./compile.sh [clean|CLEAN]" per pulire le directory.
+
+E' necessario fornire diritti di esecuzione allo script.
 
 ## Esecuzione (credit to Mattia Maldini)
 

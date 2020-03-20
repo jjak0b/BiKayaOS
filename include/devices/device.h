@@ -1,7 +1,7 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
-#include <shared/types.h>
+#include <utilities/types.h>
 
 #define DEV_FULL_MASK 				0xFFFFFFFF
 

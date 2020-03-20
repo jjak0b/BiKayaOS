@@ -28,7 +28,6 @@ void main(){
 	initPcbs();
 	scheduler_init();	/* Inizializzazione scheduler */
 
-	// TODO:
 	//----------------------------------------------------
 	test_init(); /* inserisce le funzioni di test nello scheduler come processi */
 
