@@ -1,4 +1,5 @@
 #include <devices/terminal.h>
+#include "stdbool.h" // TODO RIMUOVI E SISTEMA GIU'
 
 word tx_status(termreg_t *device) {
     return ((device->transm_status) & TERMINAL_STATUS_MASK);

@@ -1,14 +1,13 @@
 #ifndef H_SYSINIT
 #define H_SYSINIT
 
-#include "types_bikaya.h"
+#include "utilities/types.h"
 
 /**
  * @brief Inizializza il registro di status:
  * - mascherando gli interrupt
  * - disabilitando la virtual memory
  * - settando la kernel mode
- * - abilitando il timer del coprocessor 0
  * @param 
  * state: puntatore ad una new area del ROM Reserved Frame
  */
@@ -22,33 +21,29 @@ void initAreas(void);
 /**
  * @brief Inizializza la SysCall New Area
  * @param 
- * state: puntatore ad una new area del ROM Reserved Frame
- * devregarea: puntatore alla Bus register area 
+ * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initSysCallArea(state_t *area, devregarea_t *devregarea);
+void initSysCallArea(word ram_top_addr);
 
 /**
  * @brief Inizializza la Trap New Area
  * @param 
- * state: puntatore ad una new area del ROM Reserved Frame
- * devregarea: puntatore alla Bus register area 
+ * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initTrapArea(state_t *area, devregarea_t *devregarea);
+void initTrapArea(word ram_top_addr);
 
 /**
  * @brief Inizializza la TLB New Area
  * @param 
- * state: puntatore ad una new area del ROM Reserved Frame
- * devregarea: puntatore alla Bus register area 
+ * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initTLBArea(state_t *area, devregarea_t *devregarea);
+void initTLBArea(word ram_top_addr);
 
 /**
  * @brief Inizializza la Interrupt New Area
  * @param 
- * state: puntatore ad una new area del ROM Reserved Frame
- * devregarea: puntatore alla Bus register area 
+ * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initInterruptArea(state_t *area, devregarea_t *devregarea);
+void initInterruptArea(word ram_top_addr);
 
 #endif

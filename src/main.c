@@ -18,8 +18,6 @@
 
 #include "test.h" /* test fase */
 
-extern struct list_head *ready_queue;
-
 void main(){
 	// Inizialializzazione del sistema
 	//----------------------------------------------------
@@ -27,9 +25,8 @@ void main(){
 	//----------------------------------------------------
 
 	initPcbs();
-	INIT_LIST_HEAD(ready_queue);
 
-	// TODO:
+	// TODO: è da inizializzare lo scheduler. si deve inizializzare la reaady queue
 	//----------------------------------------------------
 	test_init(); /* inserisce le funzioni di test nello scheduler come processi */
 
