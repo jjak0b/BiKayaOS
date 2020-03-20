@@ -28,7 +28,6 @@ void main(){
 	initPcbs();
 	scheduler_init();	/* Inizializzazione scheduler */
 
-	// TODO: è da inizializzare lo scheduler. si deve inizializzare la reaady queue
 	//----------------------------------------------------
 	test_init(); /* inserisce le funzioni di test nello scheduler come processi */
 

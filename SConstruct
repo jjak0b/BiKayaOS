@@ -35,13 +35,14 @@ interrupts_h    = dir_h + '/interrupts'
 pcb_h           = dir_h + '/pcb'
 scheduler_h     = dir_h + '/scheduler'
 system_h        = dir_h + '/system'
+sysshared_h     = system_h + '/shared'
 utilities_h     = dir_h + '/utilities'
 
 # INCLUDE dir specifiche per architettura
 uarm_h      = dir_h     + '/uarm'
 umps_h      = dir_h     + '/umps'
-sysuarm_h   = system_h  + '/system/uarm'
-sysumps_h   = system_h  + '/system/umps'
+sysuarm_h   = system_h  + '/uarm'
+sysumps_h   = system_h  + '/umps'
 
 # Definizione directory SOURCE 
 #-------------------------------------------------------
@@ -70,7 +71,7 @@ umps_d  = dir_s + '/umps'
 # Source files list (without extension)
 #-------------------------------------------------------
 main_f      = dir_s + '/main' 
-p15test_f  = dir_s + '/p1.5test_bikaya_v0'
+p15test_f   = dir_s + '/p1.5test_bikaya_v0'
 test_f      = dir_s + '/test'
 
 # ASL Module
@@ -164,7 +165,7 @@ uarm_ENV = Environment(
 
 # Headers lists
 #-------------------
-shared_headers_list = [dir_h, system_h, asl_h, devices_h, handler_h, interrupts_h, pcb_h, scheduler_h, utilities_h]
+shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, devices_h, handler_h, interrupts_h, pcb_h, scheduler_h, utilities_h]
 uarm_headers_list   = [sysuarm_h]
 umps_headers_list   = [sysumps_h]
 
