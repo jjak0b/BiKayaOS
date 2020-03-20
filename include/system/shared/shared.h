@@ -10,6 +10,9 @@
  */
 
 #include <system/system.h>
+#include <shared/types.h>
+
+#define TIME_SLICE 0xFFFF0000 /* TODO: da sistemare a valore effettivo */ /* Time slice di CPU dedicato ad ogni processo */
 
 void EnableInterrupts( state_t *state, int b_flag );
 
@@ -20,6 +23,8 @@ void EnableVirtualMemory( state_t *state, int b_flag );
 void SetPC( state_t *state, memaddr value );
 
 void SetSP( state_t *state, memaddr value );
+
+void SetLR( state_t *state, memaddr value );
 
 /**
  * @brief Copia before in after
