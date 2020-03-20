@@ -12,9 +12,6 @@ struct scheduler_t {
 };
 typedef struct scheduler_t scheduler_t;
 
-/* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
-static scheduler_t scheduler;
-
 /**
  * @brief Inizializza lo scheduler
  * 

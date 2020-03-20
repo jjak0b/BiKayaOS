@@ -15,6 +15,7 @@
 
 #include "system.h"
 #include "pcb/pcb.h"
+#include "scheduler/scheduler.h"
 
 #include "test.h" /* test fase */
 
@@ -25,6 +26,7 @@ void main(){
 	//----------------------------------------------------
 
 	initPcbs();
+	scheduler_init();	/* Inizializzazione scheduler */
 
 	// TODO: è da inizializzare lo scheduler. si deve inizializzare la reaady queue
 	//----------------------------------------------------
