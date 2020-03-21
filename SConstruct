@@ -166,8 +166,8 @@ uarm_ENV = Environment(
 # Headers lists
 #-------------------
 shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, devices_h, handler_h, interrupts_h, pcb_h, scheduler_h, utilities_h]
-uarm_headers_list   = [sysuarm_h]
-umps_headers_list   = [sysumps_h]
+uarm_headers_list   = [uarm_h, sysuarm_h]
+umps_headers_list   = [umps_h, sysumps_h]
 
 for i,x in enumerate(shared_headers_list):
     shared_headers_list[i] = PRFX_I+x
