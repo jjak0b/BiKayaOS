@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-#--------------Script per compilare BiKayaOS - Phase1.5----------------------
+#--------------Script per compilare BiKayaOS - Phase1.5--------------------------
 #                        - Bikaya OS - Phase 1.5 -
 #    
 #	Welcome to BiKaya OS!
