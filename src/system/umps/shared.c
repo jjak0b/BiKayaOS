@@ -22,6 +22,10 @@ void SetSP(state_t *state, memaddr value){
     state->reg_sp = value;
 }
 
+void SetLR( state_t *state, memaddr value ) {
+//    state->lr = value;
+}
+
 void moveState(state_t *before, state_t *after){
 	after->entry_hi = before->entry_hi;
 	after->cause = before->cause;
