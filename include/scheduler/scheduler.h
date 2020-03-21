@@ -58,13 +58,16 @@ int scheduler_StateToReady( state_t* state );
 int scheduler_StateToWaiting();
 
 /**
- * @brief Dealloca il descritto del processo che era in esecuzione
+ * @brief Dealloca il descrittore del processo che era in esecuzione
  * 
  * @return int 
  * 			* 1 se non c'è alcun processo tracciato dallo scheduler in esecuzione
  * 			* 0 altrimenti se è avvenuto tutto correttamente
+ * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue il descrittore del processo in esecuzione e tutta la sua progenie,
+ * 									Se FALSE rimuove e dealloca solo il descrittore in esecuzione, ma tutti i suoi figli non avranno padre e ogni figlio non avrà fratelli
+ * 										cioè saranno indipendenti tra loro
  */
-int scheduler_StateToTerminate();
+int scheduler_StateToTerminate( int b_flag_terminate_progeny  );
 
 /**
  * @brief Crea un processo, aggiungendolo al ciclo di vita dello scheduler
@@ -81,5 +84,17 @@ int scheduler_CreateProcess( function_t func, int priority );
  * @param p descrittore del processo
  */
 void scheduler_AddProcess( pcb_t *p );
+
+/**
+ * @brief 	wrapper di pcb_RemoveProgenyQ con passata la ready queue
+ * @PostCondition 	Se p è il processo in esecuzione allora viene deassociato nella struttura dello scheduler.
+ * 					Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.
+ * 
+ * @param p descrittore del processo da cui partire a rimuovere la progenie
+ * @return int 
+ * 			* 1 Se p == NULL
+ * 			* 0 altrimenti
+ */
+int scheduler_RemoveProgeny( pcb_t* p );
 
 #endif

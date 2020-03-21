@@ -95,6 +95,7 @@ handler_f           = handler_s + '/handler'
 # PCB Module
 #--------------------
 pcb_f               = pcb_s + '/pcb'
+pcb_utils_f         = pcb_s + '/utils'
 
 # Scheduler Module
 #--------------------
@@ -181,7 +182,7 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, handler_f, terminal_f, printer_f, device_f, asl_f]
+shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, pcb_utils_f, handler_f, terminal_f, printer_f, device_f, asl_f]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
 uarm_noext_list   = [uarm_shared_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm ]

@@ -1,6 +1,7 @@
 #include <scheduler.h>
 #include <system/shared/shared.h>
 #include <utilities/types.h>
+#include <pcb/utils.h>
 
 static scheduler_t *scheduler;
 
@@ -59,13 +60,32 @@ int scheduler_StateToWaiting() {
 	return 0;
 }
 
-int scheduler_StateToTerminate() {
+int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 	if( scheduler->running_p == NULL ){
 		return 1;
 	}
 
-	freePcb( scheduler->running_p );
-	scheduler->running_p = NULL;
+	if( b_flag_terminate_progeny ) {
+		scheduler_RemoveProgeny( scheduler->running_p );
+	}
+	else {
+		pcb_SetChildrenParent( scheduler->running_p, NULL );
+		freePcb( scheduler->running_p );
+		scheduler->running_p = NULL;
+	}
+
+	return 0;
+}
+
+int scheduler_RemoveProgeny( pcb_t* p ){
+	if( p == NULL ){
+		return 1;
+	}
+	else if( scheduler->running_p == p ){
+		scheduler->running_p = NULL; /* Rimuovo il tracciante di questo descrittore attivo */
+	}
+
+	pcb_RemoveProgenyQ( p, &scheduler->ready_queue );
 
 	return 0;
 }
@@ -76,7 +96,6 @@ int scheduler_CreateProcess( function_t func, int priority ) {
 		return -1;
 	}
 	SetPC( &pcb->p_s, (memaddr)func );
-	SetLR( &pcb->p_s, (memaddr)scheduler_StateToTerminate ); /* Temporaneamente questo è l'indirizzo di ritorno */
 	/* TODO: SetSP( ); SP dovrebbe essere dinamicamente in base al gestore della memoria */
 	/* TODO: flag status, ecc ... */
 	EnableKernelMode( &pcb->p_s, FALSE );
