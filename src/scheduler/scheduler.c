@@ -4,7 +4,7 @@
 
 static scheduler_t *scheduler;
 
-int scheduler_init() {
+void scheduler_init() {
 	static scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
 	mkEmptyProcQ( &scheduler_struct.ready_queue );
 	scheduler_struct.running_p = NULL;
@@ -56,6 +56,7 @@ int scheduler_StateToReady( state_t* state ) {
 
 int scheduler_StateToWaiting() {
 	/* TODO */
+	return 0;
 }
 
 int scheduler_StateToTerminate() {
@@ -74,15 +75,16 @@ int scheduler_CreateProcess( function_t func, int priority ) {
 	if( pcb == NULL ) {
 		return -1;
 	}
-	SetPC( &pcb->p_s, func );
-	SetLR( &pcb->p_s, scheduler_StateToTerminate ); /* Temporaneamente questo è l'indirizzo di ritorno */
+	SetPC( &pcb->p_s, (memaddr)func );
+	SetLR( &pcb->p_s, (memaddr)scheduler_StateToTerminate ); /* Temporaneamente questo è l'indirizzo di ritorno */
 	/* TODO: SetSP( ); SP dovrebbe essere dinamicamente in base al gestore della memoria */
 	/* TODO: flag status, ecc ... */
 	EnableKernelMode( &pcb->p_s, FALSE );
 
 	scheduler_AddProcess( pcb );
+	return 0;
 }
 
-int scheduler_AddProcess( pcb_t *p ) {
+void scheduler_AddProcess( pcb_t *p ) {
 	insertProcQ( &scheduler->ready_queue, p );
 }

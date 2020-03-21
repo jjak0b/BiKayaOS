@@ -17,10 +17,10 @@ void test_init() {
         EnableKernelMode( &dummy->p_s, TRUE );
 
         #ifdef TARGET_UARM
-            SetSP( &dummy->p_s, RAM_TOP - (FRAME_SIZE * i ) );
+            SetSP( &dummy->p_s, (memaddr)RAM_TOP - (FRAME_SIZE * i ) );
         #endif
         #ifdef TARGET_UMPS
-            SetSP( &dummy->p_s, NULL ); /* TODO */
+            SetSP( &dummy->p_s, (memaddr)NULL ); /* TODO */
         #endif
         dummy->original_priority = priority;
         dummy->priority = priority;
@@ -28,9 +28,9 @@ void test_init() {
         tests[ i ] = dummy;
     }
 
-    SetPC( &tests[ 0 ]->p_s, test1 );
-    SetPC( &tests[ 1 ]->p_s, test2 );
-    SetPC( &tests[ 2 ]->p_s, test3 );
+    SetPC( &tests[ 0 ]->p_s, (memaddr)test1 );
+    SetPC( &tests[ 1 ]->p_s, (memaddr)test2 );
+    SetPC( &tests[ 2 ]->p_s, (memaddr)test3 );
 
     for( i = 0; i < 3; i++ ) {
         scheduler_AddProcess( tests[ i ] );

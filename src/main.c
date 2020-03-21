@@ -19,7 +19,7 @@
 
 #include "test.h" /* test fase */
 
-void main(){
+int main(){
 	// Inizialializzazione del sistema
 	//----------------------------------------------------
 	initAreas();

@@ -119,6 +119,7 @@ umps_sysinit_f      = sysumps_s + '/sysinit'
 ##UARM dedicated
 crtso_uarm  = uarm_d + '/crtso'
 libuarm     = uarm_d + '/libuarm'
+libdiv_uarm = uarm_d + '/libdiv'
 
 ##UMPS dedicated
 crtso_umps  = umps_d + '/crtso'
@@ -183,7 +184,7 @@ for i,x in enumerate(umps_headers_list):
 shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, handler_f, terminal_f, printer_f, device_f, asl_f]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
-uarm_noext_list   = [uarm_shared_f, uarm_sysinit_f, crtso_uarm, libuarm]
+uarm_noext_list   = [uarm_shared_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm ]
 umps_noext_list   = [umps_shared_f, umps_sysinit_f, crtso_umps, libumps]
 
 # Source .C lists
@@ -199,6 +200,7 @@ for x in uarm_noext_list:
     uarm_c_list.append(x+C_EXT)
 uarm_c_list[-1] = uarm_c_list[-1].replace(C_EXT, S_EXT_LOW)
 uarm_c_list[-2] = uarm_c_list[-2].replace(C_EXT, S_EXT_LOW)
+uarm_c_list[-3] = uarm_c_list[-3].replace(C_EXT, S_EXT_LOW)
 
 for x in umps_noext_list:
     umps_c_list.append(x+C_EXT)
