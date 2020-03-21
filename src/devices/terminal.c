@@ -1,5 +1,5 @@
 #include <devices/terminal.h>
-#include "stdbool.h" // TODO RIMUOVI E SISTEMA GIU'
+#include <utilities/types.h>
 
 word tx_status(termreg_t *device) {
     return ((device->transm_status) & TERMINAL_STATUS_MASK);
@@ -80,8 +80,8 @@ int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str) {
 
     int             status = 0;
     unsigned int    length = 0;
-    bool flag_continue  = true;
-    bool flag_EOL       = false;
+    int flag_continue  = TRUE;
+    int flag_EOL       = FALSE;
 
     /* Continua a riempire il buffer finchè:
      * 1) c'è spazio; 
@@ -101,8 +101,8 @@ int terminal_gets(termreg_t *device, char *str_buffer, unsigned int size_str) {
             str_buffer++;
             length++;
         }else {
-            flag_EOL        = true;
-            flag_continue   = false;
+            flag_EOL        = TRUE;
+            flag_continue   = TRUE;
         }
     }
 
