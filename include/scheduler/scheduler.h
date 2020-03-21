@@ -18,9 +18,8 @@ typedef struct scheduler_t scheduler_t;
 /**
  * @brief Inizializza lo scheduler
  * 
- * @return int 
  */
-int scheduler_init();
+void scheduler_init();
 
 /**
  * @brief Avvia lo scheduler
@@ -80,8 +79,7 @@ int scheduler_CreateProcess( function_t func, int priority );
  * @brief Inserisce un descrittore di processo nella ready queue
  * 
  * @param p descrittore del processo
- * @return int 
  */
-int scheduler_AddProcess( pcb_t *p );
+void scheduler_AddProcess( pcb_t *p );
 
 #endif
