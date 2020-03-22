@@ -17,11 +17,16 @@ void test_init() {
         EnableKernelMode( &dummy->p_s, TRUE );
 
         #ifdef TARGET_UARM
-            SetSP( &dummy->p_s, (memaddr)RAM_TOP - (FRAME_SIZE * i ) );
+            SetSP( &dummy->p_s, (memaddr)RAM_TOP - ( FRAMESIZE * i ) );
         #endif
         #ifdef TARGET_UMPS
-            SetSP( &dummy->p_s, (memaddr)NULL ); /* TODO */
+            /* calcolo dell'indirizzo top della RAM */
+            devregarea_t *devregarea = (devregarea_t *)DEV_REG_AREA;
+	        word ram_top_addr = devregarea->rambase + devregarea->ramsize;
+        
+            SetSP( &dummy->p_s, (memaddr)ram_top_addr - ( FRAMESIZE * i ) );
         #endif
+        
         dummy->original_priority = priority;
         dummy->priority = priority;
 
