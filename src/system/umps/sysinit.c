@@ -60,7 +60,7 @@ void initInterruptArea(word ram_top_addr){
 void initStatusFlag(state_t *state){
 	//state->status &= 0;
 	EnableInterrupts(state, 0);
-	EnableKernelMode(state, 0);
+	EnableKernelMode(state, 1);
 	EnableVirtualMemory(state, 0);
 	//state->status |= STATUS_BEV;	//Bit 22 of processor state area; related to exception vector
 	//state->status |= STATUS_CU0;	//Bit 28 of processor state area; related to coprocessor usability
