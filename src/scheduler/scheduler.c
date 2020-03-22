@@ -3,7 +3,7 @@
 #include <utilities/types.h>
 #include <pcb/utils.h>
 
-static scheduler_t *scheduler;
+static scheduler_t *scheduler; // non dovrebbe essere definito static
 
 void scheduler_init() {
 	static scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */

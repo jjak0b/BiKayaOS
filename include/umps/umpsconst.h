@@ -1,3 +1,5 @@
+#include "umps/arch.h"
+
 /* Addresses for new and old areas (where new and old processor states are
    stored on exceptions) */
 #define DEV_REG_AREA 0x10000000
@@ -11,3 +13,7 @@
 #define PGMTRAP_NEWAREA (EXCV_BASE + (5 * STATE_T_SIZE))
 #define SYSBK_OLDAREA (EXCV_BASE + (6 * STATE_T_SIZE))
 #define SYSBK_NEWAREA (EXCV_BASE + (7 * STATE_T_SIZE))
+
+#define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)
+#define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)
+#define RAMTOP     (RAMBASE + RAMSIZE)

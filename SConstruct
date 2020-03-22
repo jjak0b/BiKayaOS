@@ -17,11 +17,11 @@
 #    DEFINE 
 #---------------------------------------------------
 
-S_EXT_LOW ='.s'
-S_EXT_HI  ='.S'
-C_EXT ='.c'
-O_EXT ='.o'
-PRFX_I = '-I'
+S_EXT_LOW   ='.s'
+S_EXT_HI    ='.S'
+C_EXT       ='.c'
+O_EXT       ='.o'
+PRFX_I      = '-I'
 
 # Definizione directory INCLUDE 
 #-------------------------------------------------------
@@ -31,7 +31,6 @@ dir_h = './include'
 asl_h           = dir_h + '/asl'
 devices_h       = dir_h + '/devices'
 handler_h       = dir_h + '/handler'
-interrupts_h    = dir_h + '/interrupts'
 pcb_h           = dir_h + '/pcb'
 scheduler_h     = dir_h + '/scheduler'
 system_h        = dir_h + '/system'
@@ -43,6 +42,8 @@ uarm_h      = dir_h     + '/uarm'
 umps_h      = dir_h     + '/umps'
 sysuarm_h   = system_h  + '/uarm'
 sysumps_h   = system_h  + '/umps'
+uarm_handler_h = handler_h + '/uarm'
+umps_handler_h = handler_h + '/umps'
 
 # Definizione directory SOURCE 
 #-------------------------------------------------------
@@ -51,22 +52,18 @@ dir_s = './src'
 # All SOURCE dir
 asl_s           = dir_s + '/asl'
 devices_s       = dir_s + '/devices'
-handler_s       = dir_s + '/handler'
-interrupts_s    = dir_s + '/interrupts'
 pcb_s           = dir_s + '/pcb'
 scheduler_s     = dir_s + '/scheduler'
 system_s        = dir_s + '/system'
 utilities_s     = dir_s + '/utilities'
 
 # SOURCE dir specifiche per architettura
-uarm_s      = dir_s     + '/uarm'
-umps_s      = dir_s     + '/umps'
-sysuarm_s   = system_s  + '/uarm'
-sysumps_s   = system_s  + '/umps'
-
-# SOURCE dir specifiche per architettura
-uarm_d  = dir_s + '/uarm'
-umps_d  = dir_s + '/umps'
+uarm_s           = dir_s     + '/uarm'
+umps_s           = dir_s     + '/umps'
+sysuarm_s        = system_s  + '/uarm'
+sysumps_s        = system_s  + '/umps'
+uarm_handler_s   = dir_s + '/handler/uarm'
+umps_handler_s   = dir_s + '/handler/umps'
 
 # Source files list (without extension)
 #-------------------------------------------------------
@@ -86,11 +83,10 @@ terminal_f          = devices_s + '/terminal'
 
 # Handler Module
 #--------------------
-handler_f           = handler_s + '/handler'
-
-# Interrupts Module
-#--------------------
-#
+##UARM dedicated
+uarm_handler_f  = uarm_handler_s + '/handler'
+##UMPS dedicated    
+umps_handler_f  = umps_handler_s + '/handler'
 
 # PCB Module
 #--------------------
@@ -118,13 +114,13 @@ umps_sysinit_f      = sysumps_s + '/sysinit'
 # File di architettura
 #--------------------
 ##UARM dedicated
-crtso_uarm  = uarm_d + '/crtso'
-libuarm     = uarm_d + '/libuarm'
-libdiv_uarm = uarm_d + '/libdiv'
+crtso_uarm  = uarm_s + '/crtso'
+libuarm     = uarm_s + '/libuarm'
+libdiv_uarm = uarm_s + '/libdiv'
 
 ##UMPS dedicated
-crtso_umps  = umps_d + '/crtso'
-libumps     = umps_d + '/libumps'
+crtso_umps  = umps_s + '/crtso'
+libumps     = umps_s + '/libumps'
 
 #---------------------------------------------------
 # ENVIRONMENT
@@ -167,9 +163,9 @@ uarm_ENV = Environment(
 
 # Headers lists
 #-------------------
-shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, devices_h, handler_h, interrupts_h, pcb_h, scheduler_h, utilities_h]
-uarm_headers_list   = [uarm_h, sysuarm_h]
-umps_headers_list   = [umps_h, sysumps_h]
+shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, devices_h, handler_h, pcb_h, scheduler_h, utilities_h]
+uarm_headers_list   = [uarm_h, sysuarm_h, uarm_handler_h]
+umps_headers_list   = [umps_h, sysumps_h, umps_handler_h]
 
 for i,x in enumerate(shared_headers_list):
     shared_headers_list[i] = PRFX_I+x
@@ -182,11 +178,11 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, pcb_utils_f, handler_f, terminal_f, printer_f, device_f, asl_f]
+shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, pcb_utils_f, terminal_f, printer_f, device_f, asl_f]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
-uarm_noext_list   = [uarm_shared_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm ]
-umps_noext_list   = [umps_shared_f, umps_sysinit_f, crtso_umps, libumps]
+uarm_noext_list   = [uarm_shared_f, uarm_handler_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm]
+umps_noext_list   = [umps_handler_f, umps_shared_f, umps_sysinit_f, crtso_umps, libumps]
 
 # Source .C lists
 #-------------------
@@ -234,7 +230,7 @@ if uarm_mode:
 
     # Settings
     #-----------------
-    LDFLAGS = ' -G 0 -nostdlib -T '+uarm_d+'/elf32ltsarm.h.uarmcore.x '
+    LDFLAGS = ' -G 0 -nostdlib -T '+uarm_s+'/elf32ltsarm.h.uarmcore.x '
     uarm_ENV.Append(CFLAGS = ' '.join(uarm_lib))
     uarm_ENV.Replace(ASFLAGS = uarm_ENV['CFLAGS']+' -c')
     uarm_ENV.Replace(LINKCOM = 'arm-none-eabi-ld -o kernel '+' '.join(uarm_obj)+LDFLAGS)
@@ -257,7 +253,7 @@ if umps_mode:
 
     # Settings
     #-----------------
-    LDFLAGS = ' -G 0 -nostdlib -T '+umps_d+'/umpscore.ldscript '
+    LDFLAGS = ' -G 0 -nostdlib -T '+umps_s+'/umpscore.ldscript '
     umps_ENV.Append(CFLAGS = ' '.join(umps_lib))
     umps_ENV.Replace(ASFLAGS = umps_ENV['CFLAGS']+' -c')
     umps_ENV.Replace(LINKCOM = 'mipsel-linux-gnu-ld -o kernel '+' '.join(umps_obj)+LDFLAGS)

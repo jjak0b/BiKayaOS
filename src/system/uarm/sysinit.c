@@ -1,7 +1,7 @@
-#include <system/uarm/sysinit.h>
-
 #include <system/shared/shared.h>
-#include <handler/handler.h>
+
+#include <system/uarm/sysinit.h>
+#include <handler/uarm/handler.h>
 
 void initAreas( void ){
 	initSysCallArea();

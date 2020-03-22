@@ -20,30 +20,22 @@ void initAreas(void);
 
 /**
  * @brief Inizializza la SysCall New Area
- * @param 
- * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initSysCallArea(word ram_top_addr);
+void initSysCallArea(void);
 
 /**
  * @brief Inizializza la Trap New Area
- * @param 
- * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initTrapArea(word ram_top_addr);
+void initTrapArea(void);
 
 /**
  * @brief Inizializza la TLB New Area
- * @param 
- * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initTLBArea(word ram_top_addr);
+void initTLBArea(void);
 
 /**
  * @brief Inizializza la Interrupt New Area
- * @param 
- * ram_top_addr: indirizzo di RAM_TOP 
  */
-void initInterruptArea(word ram_top_addr);
+void initInterruptArea(void);
 
 #endif

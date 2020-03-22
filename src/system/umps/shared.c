@@ -22,7 +22,7 @@ void SetSP(state_t *state, memaddr value){
     state->reg_sp = value;
 }
 
-void SetLR( state_t *state, memaddr value ) {
+void SetLR(state_t *state, memaddr value) {
 //    state->lr = value;
 }
 
