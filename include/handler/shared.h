@@ -14,7 +14,7 @@
 void Handler_SysCall(void);
 void Handler_Trap( word arg0, word arg1, word arg2, word arg3 );
 void Handler_TLB( word arg0, word arg1, word arg2, word arg3 );
-void Handler_Interrupt( word arg0, word arg1, word arg2, word arg3 );
+void Handler_Interrupt();
 
 void handle_syscall(state_t *request);
 void sys3_terminate(void);

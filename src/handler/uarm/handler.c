@@ -64,10 +64,41 @@ void Handler_TLB( word arg0, word arg1, word arg2, word arg3 ) {
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt( word arg0, word arg1, word arg2, word arg3 ) {
+void Handler_Interrupt() {
 	
-    /* TIMER INT DETECTED */ 
-    //if( getCAUSE() == IL_TIMER ) { /* TODO: provvisorio, per ora è SOLO per struttura concettuale */
-    //    scheduler_StateToReady( (state_t *) INT_OLDAREA );
-    //}
+	state_t *request    = (state_t *) INT_OLDAREA;
+    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);
+    request->pc -= WORD_SIZE;
+	
+    if (cause != EXC_INTERRUPT) {
+        PANIC();
+    }
+
+    if CAUSE_IP_GET(cause, INT_TIMER) {
+        // Interval Timer
+        scheduler_StateToReady( request );
+        scheduler_StateToRunning(); 
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_DISK) {
+        // Disk Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_TAPE) {
+        // Tape Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_UNUSED) {
+        // Unused
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_PRINTER) {
+        // Printer Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_TERMINAL) {
+        // Terminal Devices
+        return;
+    }
+
 }
