@@ -55,6 +55,6 @@ void initInterruptArea(void){
 
 void initStatusFlag(state_t *state){
 	EnableInterrupts(state, 0);
-	EnableKernelMode(state, 0);
+	EnableKernelMode(state, 1);
 	EnableVirtualMemory(state, 0);
 }
