@@ -13,27 +13,31 @@
 *   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
 */
 
-#include "system.h"
-#include "pcb/pcb.h"
-#include "scheduler/scheduler.h"
+#ifdef TARGET_UMPS
+#include <system/umps/sysinit.h>
+#endif
+#ifdef TARGET_UARM
+#include <system/uarm/sysinit.h>
+#endif
 
-#include "test.h" /* test fase */
+#include <system/system.h>
+#include <pcb/pcb.h>
+#include <scheduler/scheduler.h>
+
+#include <test.h>
 
 int main(){
 	// Inizialializzazione del sistema
 	//----------------------------------------------------
 	initAreas();
 	//----------------------------------------------------
-
 	initPcbs();
-	scheduler_init();	/* Inizializzazione scheduler */
-
+	scheduler_init();
+	
+	//Avvio test
 	//----------------------------------------------------
-	test_init(); /* inserisce le funzioni di test nello scheduler come processi */
-
-	// Halt
+	test_init();
+	scheduler_main();
 	//----------------------------------------------------
-	HALT();
-
-	return -1;
+	return 0;
 }

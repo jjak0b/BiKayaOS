@@ -29,7 +29,6 @@ dir_h = './include'
 
 # All INCLUDE dir
 asl_h           = dir_h + '/asl'
-devices_h       = dir_h + '/devices'
 handler_h       = dir_h + '/handler'
 pcb_h           = dir_h + '/pcb'
 scheduler_h     = dir_h + '/scheduler'
@@ -51,19 +50,18 @@ dir_s = './src'
 
 # All SOURCE dir
 asl_s           = dir_s + '/asl'
-devices_s       = dir_s + '/devices'
 pcb_s           = dir_s + '/pcb'
 scheduler_s     = dir_s + '/scheduler'
 system_s        = dir_s + '/system'
-utilities_s     = dir_s + '/utilities'
+handler_s       = dir_s + '/handler'
 
 # SOURCE dir specifiche per architettura
 uarm_s           = dir_s     + '/uarm'
 umps_s           = dir_s     + '/umps'
 sysuarm_s        = system_s  + '/uarm'
 sysumps_s        = system_s  + '/umps'
-uarm_handler_s   = dir_s + '/handler/uarm'
-umps_handler_s   = dir_s + '/handler/umps'
+uarm_handler_s   = handler_s + '/uarm'
+umps_handler_s   = handler_s + '/umps'
 
 # Source files list (without extension)
 #-------------------------------------------------------
@@ -75,14 +73,9 @@ test_f      = dir_s + '/test'
 #--------------------
 asl_f               = asl_s + '/asl'
 
-# Devices Module
-#--------------------
-device_f            = devices_s + '/device'
-printer_f           = devices_s + '/printer'
-terminal_f          = devices_s + '/terminal'
-
 # Handler Module
 #--------------------
+handler_f       = handler_s + '/shared'
 ##UARM dedicated
 uarm_handler_f  = uarm_handler_s + '/handler'
 ##UMPS dedicated    
@@ -96,10 +89,6 @@ pcb_utils_f         = pcb_s + '/utils'
 # Scheduler Module
 #--------------------
 scheduler_f         = scheduler_s + '/scheduler'
-
-# Utilities Module
-#--------------------
-shared_f            = utilities_s + '/shared'
 
 #System Module
 #--------------------
@@ -163,7 +152,7 @@ uarm_ENV = Environment(
 
 # Headers lists
 #-------------------
-shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, devices_h, handler_h, pcb_h, scheduler_h, utilities_h]
+shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, handler_h, pcb_h, scheduler_h, utilities_h]
 uarm_headers_list   = [uarm_h, sysuarm_h, uarm_handler_h]
 umps_headers_list   = [umps_h, sysumps_h, umps_handler_h]
 
@@ -178,7 +167,7 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p15test_f, test_f, shared_f, scheduler_f, pcb_f, pcb_utils_f, terminal_f, printer_f, device_f, asl_f]
+shared_noext_list = [main_f, p15test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
 uarm_noext_list   = [uarm_shared_f, uarm_handler_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm]

@@ -1,3 +1,23 @@
+/***********************************shared.c****************************************
+*                   - Bikaya OS - Phase 1.5 - Shared -
+*    
+*	Welcome to BiKaya OS!
+*	This module implements all 
+*	functions that manage registers of struct state_t related to UARM architecture.
+*	See "system/shared/shared.h" for further infos 
+*	about the following functions.	
+*
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
+
 #include <system/shared/shared.h>
 
 void EnableInterrupts( state_t *state, int b_flag ) {

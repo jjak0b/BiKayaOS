@@ -1,13 +1,33 @@
-#include <system/shared/shared.h>
-#include <handler/uarm/handler.h>
+/***********************************handler.c****************************************
+*                   - Bikaya OS - Phase 1.5 - Handler -
+*    
+*	Welcome to BiKaya OS!
+*	This module takes care of handle all 
+*	exceptions for UARM architecture.
+*	See "handler/handler.h" for further infos 
+*	about the following functions.	
+*
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
 
+#include <system/shared/shared.h>
+#include <handler/handler.h>
+#include <handler/shared.h>
 #include <scheduler/scheduler.h>
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
 void Handler_SysCall(void){
-    state_t *request    = (state_t *) SYSBK_OLDAREA;            /*Caller CPU state*/
-    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);    /*Content of cause register*/
+    state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
+    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
     
     switch(cause){
         case EXC_SYSCALL:
@@ -41,33 +61,58 @@ void handle_syscall(state_t *request){
             PANIC();
     }
 }
-
-void sys3_terminate(void){
-    scheduler_StateToTerminate(1); /*MEGLIO DEFINIRE COSTANTE*/
-    scheduler_main();
-}
 //----------------------------------------------------------------
 
 // Trap Handler
 //----------------------------------------------------------------
-void Handler_Trap( word arg0, word arg1, word arg2, word arg3 ) {
+void Handler_Trap(void){
 	
 }
 //----------------------------------------------------------------
 
 // TLB Handler
 //----------------------------------------------------------------
-void Handler_TLB( word arg0, word arg1, word arg2, word arg3 ) {
+void Handler_TLB(void){
 
 }
 //----------------------------------------------------------------
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt( word arg0, word arg1, word arg2, word arg3 ) {
+void Handler_Interrupt(void) {	
+	state_t *request    = (state_t *) INT_OLDAREA;
+    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);
+    
+    request->pc -= WORD_SIZE;
 	
-    /* TIMER INT DETECTED */ 
-    //if( getCAUSE() == IL_TIMER ) { /* TODO: provvisorio, per ora è SOLO per struttura concettuale */
-    //    scheduler_StateToReady( (state_t *) INT_OLDAREA );
-    //}
+    if (cause != EXC_INTERRUPT) {
+        PANIC();
+    }
+
+    if CAUSE_IP_GET(cause, INT_TIMER) {
+        // Interval Timer
+        scheduler_StateToReady( request );
+        scheduler_StateToRunning(); 
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_DISK) {
+        // Disk Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_TAPE) {
+        // Tape Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_UNUSED) {
+        // Unused
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_PRINTER) {
+        // Printer Devices
+        return;
+    }
+    if CAUSE_IP_GET(cause, INT_TERMINAL) {
+        // Terminal Devices
+        return;
+    }
 }

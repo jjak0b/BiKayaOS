@@ -1,7 +1,8 @@
 #ifndef H_SYSINIT
 #define H_SYSINIT
 
-#include "utilities/types.h"
+#include <system/system.h>
+#include <utilities/types.h>
 
 /**
  * @brief Inizializza il registro di status:
