@@ -44,7 +44,6 @@ void scheduler_DoAging() {
 	if( !emptyProcQ( &scheduler->ready_queue ) ) {
 		list_for_each(it, &scheduler->ready_queue ) {
 			dummy = container_of(it, pcb_t, p_next);
-			//dummy = headProcQ( it ); NON VA BENE: prende sempre proc3
 			dummy->priority += 1;
 		}
 	}
@@ -52,13 +51,17 @@ void scheduler_DoAging() {
 
 int scheduler_StateToRunning(){
 	if( emptyProcQ( &scheduler->ready_queue ) ) { 
-		//return 1;// QUESTO NON VA BENE // FISIOLOGICO NON AVERE PROCESSI IN READY_QUEUE
 		HALT();
 	}
 	scheduler->running_p = removeProcQ( &scheduler->ready_queue );
 
-	//setTIMER( TIME_SLICE ); NON VA BENE; DOBBIAMO USARE L'INTERVAL TIMER, MENTRE QUESTA FUNZIONE SETTA IL TIMER LOCALE
-	LDIT(TIME_SLICE);
+	// TODO: sarebbe meglio unificarli in un'unica interfaccia
+	#ifdef TARGET_UARM
+		setTIMER( TIME_SLICE );
+	#endif
+	#ifdef TARGET_UMPS
+		LDIT(TIME_SLICE);
+	#endif
 
 	LDST( &scheduler->running_p->p_s );
 	return -1;

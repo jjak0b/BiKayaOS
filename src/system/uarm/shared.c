@@ -20,9 +20,12 @@
 
 #include <system/shared/shared.h>
 
+// TODO: da spostare eventualmente in header separato
+#define STATUS_FASTINT_MODE 0x00000011
+
 void EnableInterrupts( state_t *state, int b_flag ) {
     if( b_flag ){
-        state->cpsr |= STATUS_INT_MODE;
+        state->cpsr |= ( STATUS_INT_MODE | STATUS_FASTINT_MODE ); // abilito interrupt e fast intterupt per device come timer
     }
     else{
         state->cpsr &= ~STATUS_INT_MODE;
@@ -36,7 +39,7 @@ void EnableKernelMode( state_t *state, int b_flag ) {
     else{
         state->cpsr &= ~STATUS_SYS_MODE;
         state->cpsr |= STATUS_USER_MODE;
-    }   
+    }
 }
 
 void EnableVirtualMemory( state_t *state, int b_flag ) {
@@ -58,6 +61,14 @@ void SetSP( state_t *state, memaddr value ) {
 
 void SetLR( state_t *state, memaddr value ) {
     state->lr = value;
+}
+
+void SetStatus( state_t *state, word value ) {
+	state->cpsr = value;
+}
+
+word GetStatus( state_t *state ){
+    return state->cpsr;
 }
 
 void moveState(state_t *before, state_t *after){

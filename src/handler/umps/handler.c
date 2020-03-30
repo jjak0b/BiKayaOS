@@ -51,7 +51,7 @@ void handle_syscall(state_t *request){
         PANIC();
     }
 
-    if((statusReq&KERNELMODE_OFF)!=RESET_STATUS){ /*richiesta non soddisfacibile*/
+    if((statusReq & KERNELMODE_OFF )!= STATUS_NULL ){ /*richiesta non soddisfacibile*/
         PANIC(); /* in futuro sarà da gestire come eccezione (trap) ?*/
     }
 

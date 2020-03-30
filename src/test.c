@@ -29,7 +29,7 @@ void test_init(){
     for(i = 0; i < 3; i++){ // il nostro n prende i valori 1,2,3 (cioè i+1)
         tests[i] = allocPcb();
 
-        tests[i]->p_s.status = RESET_STATUS;
+        SetStatus( &( tests[i]->p_s), STATUS_NULL );
 
         EnableInterrupts(&(tests[i]->p_s), TRUE);
         EnableVirtualMemory(&(tests[i]->p_s), FALSE);
@@ -37,8 +37,8 @@ void test_init(){
 
         SetSP(&(tests[i]->p_s), (memaddr)RAM_TOP-(FRAMESIZE * (i+1)));
         
-        tests[i]->original_priority = (i+1); // secondo me qui ci va i
-        tests[i]->priority          = (i+1); // qui meglio scrivere original priority
+        tests[i]->original_priority = i;
+        tests[i]->priority          = tests[i]->original_priority;
     }
 
     SetPC(&(tests[ 0 ]->p_s), (memaddr)test1);

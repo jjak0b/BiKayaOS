@@ -71,5 +71,5 @@ void initInterruptArea(void){
 }
 
 void initStatusFlag(state_t *state){
-	state->status = RESET_STATUS;
+	state->status = STATUS_NULL;
 }

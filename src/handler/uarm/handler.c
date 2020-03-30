@@ -28,7 +28,7 @@
 void Handler_SysCall(void){
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
-    
+
     switch(cause){
         case EXC_SYSCALL:
             handle_syscall(request);
@@ -66,14 +66,16 @@ void handle_syscall(state_t *request){
 // Trap Handler
 //----------------------------------------------------------------
 void Handler_Trap(void){
-	
+	tprint( "ERROR: Trap currently unsupported\n" );
+    PANIC();
 }
 //----------------------------------------------------------------
 
 // TLB Handler
 //----------------------------------------------------------------
 void Handler_TLB(void){
-
+    tprint( "ERROR: TLB currently unsupported\n" );
+    PANIC();
 }
 //----------------------------------------------------------------
 
@@ -82,36 +84,36 @@ void Handler_TLB(void){
 void Handler_Interrupt(void) {	
 	state_t *request    = (state_t *) INT_OLDAREA;
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);
-    
+    tprint( "Handler: Interrupt\n" ); // DEBUG
     request->pc -= WORD_SIZE;
 	
     if (cause != EXC_INTERRUPT) {
         PANIC();
     }
 
-    if CAUSE_IP_GET(cause, INT_TIMER) {
+    if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
         // Interval Timer
         scheduler_StateToReady( request );
         scheduler_StateToRunning(); 
         return;
     }
-    if CAUSE_IP_GET(cause, INT_DISK) {
+    if ( CAUSE_IP_GET(cause, INT_DISK) ) {
         // Disk Devices
         return;
     }
-    if CAUSE_IP_GET(cause, INT_TAPE) {
+    if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
         // Tape Devices
         return;
     }
-    if CAUSE_IP_GET(cause, INT_UNUSED) {
+    if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
         // Unused
         return;
     }
-    if CAUSE_IP_GET(cause, INT_PRINTER) {
+    if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
         // Printer Devices
         return;
     }
-    if CAUSE_IP_GET(cause, INT_TERMINAL) {
+    if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
         // Terminal Devices
         return;
     }
