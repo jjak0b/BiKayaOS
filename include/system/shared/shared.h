@@ -1,5 +1,6 @@
 #ifndef H_SYSTEM_SHARED
 #define H_SYSTEM_SHARED
+
 /**
  * @brief INTERFACCIA comune ad entrambe le architetture
  * 
@@ -12,7 +13,7 @@
 #include <system/system.h>
 #include <utilities/types.h>
 
-#define TIME_SLICE 0xFFFF0000 /* TODO: da sistemare a valore effettivo */ /* Time slice di CPU dedicato ad ogni processo */
+#define TIME_SLICE 3000 /* Time slice di CPU dedicato ad ogni processo */
 
 void EnableInterrupts( state_t *state, int b_flag );
 

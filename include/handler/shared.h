@@ -1,21 +1,10 @@
-#ifndef H_HANDLER
-#define H_HANDLER
+#ifndef H_HANDLER_SHARED
+#define H_HANDLER_SHARED
 
-#include <utilities/types.h>
-
-#ifdef TARGET_UARM
-#include <uarm/uARMconst.h>
-#endif
-
-/*Syscall CODE*/
-#define TERMINATEPROCESS 3
-
-/*Dichiarazioni*/
-void Handler_SysCall(void);
-void Handler_Trap( word arg0, word arg1, word arg2, word arg3 );
-void Handler_TLB( word arg0, word arg1, word arg2, word arg3 );
-void Handler_Interrupt();
-
-void handle_syscall(state_t *request);
+/**
+ * @brief Implementazione della syscall TERMINATE_PROCESS.
+ * Termina il processo corrente e tutta la sua progenie.
+ * Infine, richiama lo scheduler.
+ */
 void sys3_terminate(void);
 #endif

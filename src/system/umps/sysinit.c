@@ -1,10 +1,27 @@
+/***********************************sysinit.c****************************************
+*                   - Bikaya OS - Phase 1.5 - sysinit -
+*    
+*	Welcome to BiKaya OS!
+*	This module takes care of initialize all of 
+*	OLD Memory Areas for UMPS architecture.
+*	See "system/umps/sysinit.h" for further infos 
+*	about the following functions.	
+*
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
+
 #include <system/umps/sysinit.h>
 #include <system/shared/shared.h>
 
-#include <umps/umpsconst.h>
-#include <umps/libumps.h>
-
-#include <handler/shared.h>
+#include <handler/handler.h>
 
 void initAreas(void){
 	initSysCallArea();
@@ -18,7 +35,7 @@ void initSysCallArea(void){
 	STST(area);
 
 	SetPC(area, (memaddr) Handler_SysCall);
-	SetSP(area, RAMTOP);
+	SetSP(area, RAM_TOP);
 
 	initStatusFlag(area);
 }
@@ -28,7 +45,7 @@ void initTrapArea(void){
 	moveState((state_t *) SYSBK_NEWAREA, area);
 
 	SetPC(area,(memaddr)Handler_Trap);
-	SetSP(area,RAMTOP);
+	SetSP(area,RAM_TOP);
 
 	initStatusFlag(area);
 }
@@ -38,7 +55,7 @@ void initTLBArea(void){
 	moveState((state_t *) SYSBK_NEWAREA, area);
 
 	SetPC(area,(memaddr)Handler_TLB);
-	SetSP(area,RAMTOP);
+	SetSP(area,RAM_TOP);
 
 	initStatusFlag(area);
 }
@@ -48,13 +65,11 @@ void initInterruptArea(void){
 	moveState((state_t *) SYSBK_NEWAREA, area);
 
 	SetPC(area,(memaddr)Handler_Interrupt);
-	SetSP(area,RAMTOP);
+	SetSP(area,RAM_TOP);
 
 	initStatusFlag(area);
 }
 
 void initStatusFlag(state_t *state){
-	EnableInterrupts(state, 0);
-	EnableKernelMode(state, 1);
-	EnableVirtualMemory(state, 0);
+	state->status = RESET_STATUS;
 }

@@ -1,12 +1,34 @@
+/***********************************scheduler.c****************************************
+*                   - Bikaya OS - Phase 1.5 - Scheduler -
+*   
+*	Welcome to BiKaya OS!
+*	This module handle all 
+*	functions about scheduler.
+*	See "scheduler/scheduler.h" for further infos 
+*	about the following functions.	
+*
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
+
 #include <scheduler.h>
 #include <system/shared/shared.h>
 #include <utilities/types.h>
 #include <pcb/utils.h>
+#include <system/const.h>
 
-static scheduler_t *scheduler; // non dovrebbe essere definito static
+//static scheduler_t *scheduler; //USARE HIDDEN
+HIDDEN scheduler_t *scheduler;
 
 void scheduler_init() {
-	static scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
+	HIDDEN scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
 	mkEmptyProcQ( &scheduler_struct.ready_queue );
 	scheduler_struct.running_p = NULL;
 	scheduler = &scheduler_struct;
@@ -21,19 +43,23 @@ void scheduler_DoAging() {
 	pcb_t *dummy;
 	if( !emptyProcQ( &scheduler->ready_queue ) ) {
 		list_for_each(it, &scheduler->ready_queue ) {
-			dummy = headProcQ( it );
+			dummy = container_of(it, pcb_t, p_next);
+			//dummy = headProcQ( it ); NON VA BENE: prende sempre proc3
 			dummy->priority += 1;
 		}
 	}
 }
 
 int scheduler_StateToRunning(){
-	if( emptyProcQ( &scheduler->ready_queue ) ) {
-		return 1;
+	if( emptyProcQ( &scheduler->ready_queue ) ) { 
+		//return 1;// QUESTO NON VA BENE // FISIOLOGICO NON AVERE PROCESSI IN READY_QUEUE
+		HALT();
 	}
 	scheduler->running_p = removeProcQ( &scheduler->ready_queue );
 
-	setTIMER( TIME_SLICE );
+	//setTIMER( TIME_SLICE ); NON VA BENE; DOBBIAMO USARE L'INTERVAL TIMER, MENTRE QUESTA FUNZIONE SETTA IL TIMER LOCALE
+	LDIT(TIME_SLICE);
+
 	LDST( &scheduler->running_p->p_s );
 	return -1;
 }
@@ -62,7 +88,7 @@ int scheduler_StateToWaiting() {
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 	if( scheduler->running_p == NULL ){
-		return 1;
+		return 1; // MANDA IN PANIC
 	}
 
 	if( b_flag_terminate_progeny ) {

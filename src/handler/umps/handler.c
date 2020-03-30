@@ -1,6 +1,26 @@
-#include <system/shared/shared.h>
-#include <handler/umps/handler.h>
+/***********************************handler.c****************************************
+*                   - Bikaya OS - Phase 1.5 - Handler -
+*    
+*	Welcome to BiKaya OS!
+*	This module takes care of handle all 
+*	exceptions for UMPS architecture.
+*	See "handler/handler.h" for further infos 
+*	about the following functions.	
+*
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
 
+#include <system/shared/shared.h>
+#include <handler/handler.h>
+#include <handler/shared.h>
 #include <scheduler/scheduler.h>
 
 
@@ -10,11 +30,14 @@ void Handler_SysCall(void){
     state_t *request    = (state_t *) SYSBK_OLDAREA;            /*Caller CPU state*/
     word cause          = CAUSE_GET_EXCCODE(request->cause);    /*Content of cause register*/
     
+    request->pc_epc += WORD_SIZE; //jump to next instruction
+
     switch(cause){
         case EXC_SYS:
             handle_syscall(request);
             break;
         case EXC_BP:
+            LDST(request); /*nothing to do.. (4 now)*/
         default: 
             PANIC();
     }
@@ -28,52 +51,43 @@ void handle_syscall(state_t *request){
         PANIC();
     }
 
-    if((statusReq&STATUS_KUc)!=0){ /*richiesta non soddisfacibile*/
-        PANIC(); /* in futuro sarà da gestire come eccezione (trap) */
+    if((statusReq&KERNELMODE_OFF)!=RESET_STATUS){ /*richiesta non soddisfacibile*/
+        PANIC(); /* in futuro sarà da gestire come eccezione (trap) ?*/
     }
-
-    request->pc_epc += sizeof(word); //jump to next instruction
 
     switch(sysReq){
         case TERMINATEPROCESS:
             sys3_terminate();
-            break;
-        default:
+        default: /*non dovremmo essere qui!*/
             PANIC();
     }
-}
-
-void sys3_terminate(void){
-    scheduler_StateToTerminate(1); /*MEGLIO DEFINIRE COSTANTE*/
-    scheduler_main();
 }
 //----------------------------------------------------------------
 
 // Trap Handler
 //----------------------------------------------------------------
-void Handler_Trap( word arg0, word arg1, word arg2, word arg3 ) {
-	
+void Handler_Trap(void) {
+    PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
 
 // TLB Handler
 //----------------------------------------------------------------
-void Handler_TLB( word arg0, word arg1, word arg2, word arg3 ) {
-
+void Handler_TLB(void) {
+    PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt() {
-	
+void Handler_Interrupt(void) {
 	state_t *request    = (state_t *) INT_OLDAREA;
-	word cause          = CAUSE_GET_EXCCODE(request->cause);
+	word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
     
-    if (cause != EXC_INT) {
+    if (exc_cause != EXC_INT) {
         PANIC();
     }
-
+/*
     if (CDEV_BITMAP_ADDR(IL_IPI)) {
         // Inter-processor interrupts
         return;
@@ -82,12 +96,14 @@ void Handler_Interrupt() {
         // Processor Local Timer
         return;
     }
-    if (CDEV_BITMAP_ADDR(IL_TIMER)) {
+*/
+    if (CAUSE_IP(IL_TIMER)) {
         // Interval Timer
         scheduler_StateToReady( request );
         scheduler_StateToRunning(); 
         return;
     }
+    /*
     if (CDEV_BITMAP_ADDR(IL_DISK)) {
         // Disk Devices
         return;
@@ -108,5 +124,7 @@ void Handler_Interrupt() {
         // Terminal Devices
         return;
     }
-
+    */
+    /*interrupt sollevato per una ragione sconosciuta*/
+    PANIC();
 }

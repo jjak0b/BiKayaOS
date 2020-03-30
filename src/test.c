@@ -1,43 +1,51 @@
-#include "test.h"
+/***********************************test.c****************************************
+*                   - Bikaya OS - Phase 1.5 - Test -
+*    
+*	Welcome to BiKaya OS!
+*	To test kernel, just read README.md 
+*	Enjoy using BiKaya OS. :)
+*
+*	Copyright (c) 2020 lso20az15. All rights reserved.
+*	This work is licensed under the terms of the MIT license.
+*	For a copy, see LICENSE.
+* 	 
+*	@credit: 
+*   Stefano De Santis, Cristiano Guidotti, Iacopo Porcedda, Jacopo Rimediotti
+*/
 
-#include "utilities/types.h"
-#include "system/shared/shared.h"
+#include <system/system.h>
+#include <utilities/types.h>
 
-#include "scheduler/scheduler.h"
-#include "pcb/pcb.h"
+#include <scheduler/scheduler.h>
+#include <pcb/pcb.h>
 
-void test_init() {
-    int priority = 10;
+#include <system/shared/shared.h>
+#include <test.h>
+
+void test_init(){
     pcb_t* tests[ 3 ];
     int i;
-    for( i = 0; i < 3; i++ ) {
-        pcb_t *dummy = allocPcb();
-        EnableInterrupts( &dummy->p_s, TRUE );
-        EnableVirtualMemory( &dummy->p_s, FALSE );
-        EnableKernelMode( &dummy->p_s, TRUE );
 
-        #ifdef TARGET_UARM
-            SetSP( &dummy->p_s, (memaddr)RAM_TOP - ( FRAMESIZE * i ) );
-        #endif
-        #ifdef TARGET_UMPS
-            /* calcolo dell'indirizzo top della RAM */
-            devregarea_t *devregarea = (devregarea_t *)DEV_REG_AREA;
-	        word ram_top_addr = devregarea->rambase + devregarea->ramsize;
-        
-            SetSP( &dummy->p_s, (memaddr)ram_top_addr - ( FRAMESIZE * i ) );
-        #endif
-        
-        dummy->original_priority = priority;
-        dummy->priority = priority;
+    for(i = 0; i < 3; i++){ // il nostro n prende i valori 1,2,3 (cioè i+1)
+        tests[i] = allocPcb();
 
-        tests[ i ] = dummy;
+        tests[i]->p_s.status = RESET_STATUS;
+
+        EnableInterrupts(&(tests[i]->p_s), TRUE);
+        EnableVirtualMemory(&(tests[i]->p_s), FALSE);
+        EnableKernelMode(&(tests[i]->p_s), TRUE);
+
+        SetSP(&(tests[i]->p_s), (memaddr)RAM_TOP-(FRAMESIZE * (i+1)));
+        
+        tests[i]->original_priority = (i+1); // secondo me qui ci va i
+        tests[i]->priority          = (i+1); // qui meglio scrivere original priority
     }
 
-    SetPC( &tests[ 0 ]->p_s, (memaddr)test1 );
-    SetPC( &tests[ 1 ]->p_s, (memaddr)test2 );
-    SetPC( &tests[ 2 ]->p_s, (memaddr)test3 );
+    SetPC(&(tests[ 0 ]->p_s), (memaddr)test1);
+    SetPC(&(tests[ 1 ]->p_s), (memaddr)test2);
+    SetPC(&(tests[ 2 ]->p_s), (memaddr)test3);
 
-    for( i = 0; i < 3; i++ ) {
-        scheduler_AddProcess( tests[ i ] );
+    for(i = 0; i < 3; i++){
+        scheduler_AddProcess(tests[ i ]);
     }
 }

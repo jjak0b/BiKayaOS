@@ -1,4 +1,5 @@
 #include "umps/arch.h"
+#include "umps/cp0.h"
 
 /* Addresses for new and old areas (where new and old processor states are
    stored on exceptions) */
@@ -16,5 +17,22 @@
 
 #define RAMBASE    *((unsigned int *)BUS_REG_RAM_BASE)
 #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)
-#define RAMTOP     (RAMBASE + RAMSIZE)
-#define FRAMESIZE 1024 /* TODO */
+#define RAM_TOP     (RAMBASE + RAMSIZE)
+
+#define FRAMESIZE (4096)
+
+#define RESET_STATUS          0x00000000
+#define INTERRUPT_ON          (STATUS_IEp)
+#define INTERRUPT_OFF         (~INTERRUPT_ON)
+#define KERNELMODE_OFF        (STATUS_KUp)
+#define KERNELMODE_ON         (~KERNELMODE_OFF)
+#define VM_ON                 (STATUS_VMp)
+#define VM_OFF                (~VM_ON)
+#define INTERVAL_TIMER_ON     (STATUS_IM(2))
+#define INTERVAL_TIMER_OFF    (~INTERVAL_TIMER_ON)
+
+#define TOD_LO          *((unsigned int *)BUS_REG_TOD_LO)
+#define TIME_SCALE      *((unsigned int *)BUS_REG_TIME_SCALE)
+#define INTERVAL_TIMER  *((unsigned int *)BUS_REG_TIMER)
+
+#define LDIT(n) (INTERVAL_TIMER = (n*TIME_SCALE))

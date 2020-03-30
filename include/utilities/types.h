@@ -1,8 +1,6 @@
 #ifndef H_TYPES
 #define H_TYPES
 
-#include <system/types_bikaya.h>
-
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
