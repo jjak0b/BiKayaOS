@@ -29,6 +29,8 @@ void Handler_SysCall(void){
     state_t *request    = (state_t *) SYSBK_OLDAREA;            /*Caller CPU state*/
     word cause          = CAUSE_GET_EXCCODE(request->cause);    /*Content of cause register*/
     
+    request->pc_epc += WORD_SIZE; //jump to next instruction
+
     switch(cause){
         case EXC_SYS:
             handle_syscall(request);
@@ -51,8 +53,6 @@ void handle_syscall(state_t *request){
     if((statusReq&KERNELMODE_OFF)!=RESET_STATUS){ /*richiesta non soddisfacibile*/
         PANIC(); /* in futuro sarà da gestire come eccezione (trap) ?*/
     }
-
-    request->pc_epc += WORD_SIZE; //jump to next instruction
 
     switch(sysReq){
         case TERMINATEPROCESS:
