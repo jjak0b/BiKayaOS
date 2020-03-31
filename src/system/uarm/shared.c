@@ -25,10 +25,12 @@
 
 void EnableInterrupts( state_t *state, int b_flag ) {
     if( b_flag ){
-        state->cpsr |= ( STATUS_INT_MODE | STATUS_FASTINT_MODE ); // abilito interrupt e fast intterupt per device come timer
+        state->cpsr = STATUS_ENABLE_INT( state->cpsr );
+        state->cpsr = STATUS_ENABLE_TIMER( state->cpsr ); /* fast interrupts */
     }
     else{
-        state->cpsr &= ~STATUS_INT_MODE;
+        state->cpsr = STATUS_DISABLE_TIMER( state->cpsr );
+        state->cpsr = STATUS_DISABLE_INT( state->cpsr );
     }
 }
 

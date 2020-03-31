@@ -26,6 +26,7 @@
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
 void Handler_SysCall(void){
+    tprint( "SysCall\n" ); // DEBUG
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
 
@@ -83,38 +84,48 @@ void Handler_TLB(void){
 //----------------------------------------------------------------
 void Handler_Interrupt(void) {	
 	state_t *request    = (state_t *) INT_OLDAREA;
-    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);
+    word cause          = cause = request->CP15_Cause;
+    word excode = CAUSE_EXCCODE_GET(request->CP15_Cause);
     tprint( "Handler: Interrupt\n" ); // DEBUG
     request->pc -= WORD_SIZE;
 	
-    if (cause != EXC_INTERRUPT) {
+    if (excode != EXC_INTERRUPT) {
         PANIC();
     }
 
     if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
         // Interval Timer
+        tprint( "TIMER\n" ); // DEBUG
         scheduler_StateToReady( request );
         scheduler_StateToRunning(); 
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_DISK) ) {
         // Disk Devices
+        tprint( "DISK\n" ); // DEBUG
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
         // Tape Devices
+        tprint( "TAPE\n" ); // DEBUG
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
         // Unused
+        tprint( "UNUSED\n" ); // DEBUG
         return;
     }
     if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
         // Printer Devices
+        tprint( "PRINTER\n" ); // DEBUG
         return;
     }
     if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
         // Terminal Devices
+        tprint( "TERM\n" ); // DEBUG
         return;
     }
+
+    tprint( "unhandled interrupt\n" );
+    PANIC();
 }
