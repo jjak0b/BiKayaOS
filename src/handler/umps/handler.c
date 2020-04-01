@@ -84,47 +84,43 @@ void Handler_Interrupt(void) {
 	state_t *request    = (state_t *) INT_OLDAREA;
 	word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
     
-    if (exc_cause != EXC_INT) {
+    if (exc_cause != EXC_INT){/*req error*/
+        PANIC(); 
+    }
+    //-------------------------------------------Handle interrupt
+    if (CAUSE_IP_GET(request->cause,IL_IPI)){/*Future use*/
         PANIC();
     }
-/*
-    if (CDEV_BITMAP_ADDR(IL_IPI)) {
-        // Inter-processor interrupts
-        return;
-    }
-    if (CDEV_BITMAP_ADDR(IL_CPUTIMER)) {
+    if (CAUSE_IP_GET(request->cause,IL_CPUTIMER)){/*Future use*/
         // Processor Local Timer
-        return;
+        PANIC();
     }
-*/
-    if (CAUSE_IP(IL_TIMER)) {
+    if (CAUSE_IP_GET(request->cause,IL_TIMER)){
         // Interval Timer
-        scheduler_StateToReady( request );
-        scheduler_StateToRunning(); 
+        scheduler_StateToReady( request ); /*Add req to ready queue*/
+        scheduler_StateToRunning(); /*Schedule*/
         return;
     }
-    /*
-    if (CDEV_BITMAP_ADDR(IL_DISK)) {
+    if (CAUSE_IP_GET(request->cause,IL_DISK)){/*Future use*/
         // Disk Devices
-        return;
+        PANIC();
     }
-    if (CDEV_BITMAP_ADDR(IL_TAPE)) {
+    if (CAUSE_IP_GET(request->cause,IL_TAPE)){/*Future use*/
         // Tape Devices
-        return;
+        PANIC();
     }
-    if (CDEV_BITMAP_ADDR(IL_ETHERNET)) {
+    if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){/*Future use*/
         // Network Devices
-        return;
+        PANIC();
     }
-    if (CDEV_BITMAP_ADDR(IL_PRINTER)) {
+    if (CAUSE_IP_GET(request->cause,IL_PRINTER)){/*Future use*/
         // Printer Devices
-        return;
+        PANIC();
     }
-    if (CDEV_BITMAP_ADDR(IL_TERMINAL)) {
+    if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){/*Future use*/
         // Terminal Devices
-        return;
+        PANIC();
     }
-    */
-    /*interrupt sollevato per una ragione sconosciuta*/
-    PANIC();
+    //----------------------------------------------------------
+    PANIC();/*interrupt not defined*/
 }

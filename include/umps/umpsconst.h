@@ -36,3 +36,5 @@
 #define INTERVAL_TIMER  *((unsigned int *)BUS_REG_TIMER)
 
 #define LDIT(n) (INTERVAL_TIMER = (n*TIME_SCALE))
+
+#define CAUSE_IP_GET(cause, device) ((cause&CAUSE_IP(device)) != 0)
