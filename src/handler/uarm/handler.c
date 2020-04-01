@@ -26,9 +26,10 @@
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
 void Handler_SysCall(void){
-    tprint( "SysCall\n" ); // DEBUG
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
+
+    request->pc -= WORD_SIZE; //jump to next instruction
 
     switch(cause){
         case EXC_SYSCALL:
@@ -37,6 +38,7 @@ void Handler_SysCall(void){
         case EXC_BREAKPOINT:
         default: 
             PANIC();
+            break;
     }
 }
 
@@ -44,15 +46,13 @@ void handle_syscall(state_t *request){
     word sysReq     = request->a1;
     word statusReq  = request->cpsr;
 
-    if(!(sysReq>0 && sysReq<12)){    /*sysCall Code non valido*/
+    if(!(sysReq>0 && sysReq<12)){    // sysCall Code non valido
         PANIC();
     }
 
-    if((statusReq&STATUS_SYS_MODE)!=0){ /*richiesta non soddisfacibile*/
-        PANIC(); /* in futuro sarà da gestire come eccezione (trap) */
+    if((statusReq & STATUS_SYS_MODE) != STATUS_SYS_MODE){ //richiesta non soddisfacibile
+        PANIC(); // in futuro sarà da gestire come eccezione (trap) 
     }
-
-    request->pc += WORD_SIZE; //jump to next instruction
 
     switch(sysReq){
         case TERMINATEPROCESS:
@@ -86,7 +86,7 @@ void Handler_Interrupt(void) {
 	state_t *request    = (state_t *) INT_OLDAREA;
     word cause          = cause = request->CP15_Cause;
     word excode = CAUSE_EXCCODE_GET(request->CP15_Cause);
-    tprint( "Handler: Interrupt\n" ); // DEBUG
+
     request->pc -= WORD_SIZE;
 	
     if (excode != EXC_INTERRUPT) {
@@ -95,37 +95,31 @@ void Handler_Interrupt(void) {
 
     if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
         // Interval Timer
-        tprint( "TIMER\n" ); // DEBUG
         scheduler_StateToReady( request );
         scheduler_StateToRunning(); 
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_DISK) ) {
         // Disk Devices
-        tprint( "DISK\n" ); // DEBUG
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
         // Tape Devices
-        tprint( "TAPE\n" ); // DEBUG
         return;
     }
     if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
         // Unused
-        tprint( "UNUSED\n" ); // DEBUG
         return;
     }
     if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
         // Printer Devices
-        tprint( "PRINTER\n" ); // DEBUG
         return;
     }
     if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
         // Terminal Devices
-        tprint( "TERM\n" ); // DEBUG
         return;
     }
 
-    tprint( "unhandled interrupt\n" );
+    // unhandled interrupt
     PANIC();
 }
