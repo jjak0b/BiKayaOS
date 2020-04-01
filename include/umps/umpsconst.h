@@ -21,7 +21,7 @@
 
 #define FRAMESIZE (4096)
 
-#define RESET_STATUS          0x00000000
+#define STATUS_NULL          0x00000000
 #define INTERRUPT_ON          (STATUS_IEp)
 #define INTERRUPT_OFF         (~INTERRUPT_ON)
 #define KERNELMODE_OFF        (STATUS_KUp)

@@ -37,7 +37,7 @@ int scheduler_main();
  * 				Dopo questo la funzione non dovrebbe restituire poichè il controllo dell'esecuzione è passato al processo
  * 				Se ciò avviene è dovuto ad un errore di LDST.
  * @return int 
- * 			* 1 se la coda dei processi è vuota
+ * 			* manda Il sistema in HALT se la coda dei processi è vuota
  * 			* -1 se non è stato caricato lo stato di un nuovo processo, senza cambiare il controllo di esecuzione ( malfunzionamento LDST )
  */
 int scheduler_StateToRunning();

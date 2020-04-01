@@ -21,6 +21,10 @@ void EnableKernelMode( state_t *state, int b_flag );
 
 void EnableVirtualMemory( state_t *state, int b_flag );
 
+void SetStatus( state_t *state, word value );
+
+word GetStatus( state_t *state );
+
 void SetPC( state_t *state, memaddr value );
 
 void SetSP( state_t *state, memaddr value );

@@ -31,8 +31,11 @@ void initAreas( void ){
 }
 
 void initStatusFlag(state_t *state) {
-	state->cpsr &= STATUS_NULL; /* Disable all ( Interrupts and others modes ) */
+	state->cpsr = STATUS_NULL; /* Disable all ( Interrupts and others modes ) */
     state->cpsr |= STATUS_SYS_MODE; /* Enable Kernel Mode */
+    state->cpsr = STATUS_DISABLE_TIMER( state->cpsr ); /* Disable Fast Interrupts for Timer to avoid an infinite loop caused by timer interrupt*/
+    state->cpsr = STATUS_DISABLE_INT( state->cpsr ); /* Disable interrupt */
+    state->CP15_Control = CP15_CONTROL_NULL;
     state->CP15_Control = CP15_DISABLE_VM( state->CP15_Control ); /* Disable Virtual memory translation */
 }
 
