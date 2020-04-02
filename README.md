@@ -23,11 +23,11 @@ Digitare 'scons TARGET=uarm' per generare il kernel per architettura uarm.
 Digitare 'scons TARGET=umps' per generare il kernel per architettura umps.
 Digitare 'scons -c' per pulire le directory.
 
-E' possibile compilare anche utilizzando uno script sh. 
+E' possibile compilare anche utilizzando uno script compile. 
 Posizionarsi nella cartella principale di BiKaya e:
-- digitare "./compile.sh [uarm|UARM]" per genereale il kernel per architettura uarm.
-- digitare "./compile.sh [umps|UMPS]" per genereale il kernel per architettura umps.
-- digitare "./compile.sh [clean|CLEAN]" per pulire le directory.
+- digitare "./compile [uarm|UARM]" per genereale il kernel per architettura uarm.
+- digitare "./compile [umps|UMPS]" per genereale il kernel per architettura umps.
+- digitare "./compile [clean|CLEAN]" per pulire le directory.
 
 E' necessario fornire diritti di esecuzione allo script.
 

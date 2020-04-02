@@ -17,7 +17,7 @@
 
 usage()
 {
-    echo "usage: compile.sh [uarm|UARM|umps|UMPS|clean|CLEAN]"
+    echo "usage: compile [uarm|UARM|umps|UMPS|clean|CLEAN]"
 }
 
 #### Main

@@ -41,13 +41,14 @@ void SetSP(state_t *state, memaddr value){
 }
 
 void SetLR(state_t *state, memaddr value){
+	/*Future use?*/
 }
 
-void SetStatus( state_t *state, word value ) {
+void SetStatus(state_t *state, word value) {
 	state->status = value;
 }
 
-word GetStatus( state_t *state ) {
+word GetStatus(state_t *state) {
     return state->status;
 }
 

@@ -24,7 +24,6 @@
 #include <pcb/utils.h>
 #include <system/const.h>
 
-//static scheduler_t *scheduler; //USARE HIDDEN
 HIDDEN scheduler_t *scheduler;
 
 void scheduler_init() {
@@ -55,7 +54,6 @@ int scheduler_StateToRunning(){
 	}
 	scheduler->running_p = removeProcQ( &scheduler->ready_queue );
 
-	// TODO: sarebbe meglio unificarli in un'unica interfaccia
 	#ifdef TARGET_UARM
 		setTIMER( TIME_SLICE );
 	#endif
@@ -91,7 +89,7 @@ int scheduler_StateToWaiting() {
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 	if( scheduler->running_p == NULL ){
-		return 1; // MANDA IN PANIC
+		return 1; // MANDA IN PANIC ??
 	}
 
 	if( b_flag_terminate_progeny ) {

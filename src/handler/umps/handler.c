@@ -23,7 +23,6 @@
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
 
-
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
 void Handler_SysCall(void){
@@ -37,7 +36,7 @@ void Handler_SysCall(void){
             handle_syscall(request);
             break;
         case EXC_BP:
-            LDST(request); /*nothing to do.. (4 now)*/
+            LDST(request); /*nothing to do.. (for now)*/
         default: 
             PANIC();
     }
@@ -47,12 +46,12 @@ void handle_syscall(state_t *request){
     word sysReq     = request->reg_a0;
     word statusReq  = request->status;
 
-    if(!(sysReq>0 && sysReq<12)){    /*sysCall Code non valido*/
+    if(!(sysReq>0 && sysReq<12)){                   /*Syscall non valida*/
         PANIC();
     }
 
-    if((statusReq & KERNELMODE_OFF )!= STATUS_NULL ){ /*richiesta non soddisfacibile*/
-        PANIC(); /* in futuro sarà da gestire come eccezione (trap) ?*/
+    if((statusReq&KERNELMODE_OFF)!=STATUS_NULL){    /*Richiesta non soddisfacibile*/
+        PANIC();
     }
 
     switch(sysReq){
@@ -87,40 +86,55 @@ void Handler_Interrupt(void) {
     if (exc_cause != EXC_INT){/*req error*/
         PANIC(); 
     }
-    //-------------------------------------------Handle interrupt
-    if (CAUSE_IP_GET(request->cause,IL_IPI)){/*Future use*/
+    
+    //---------------------------------------------------Inter TODO
+    if (CAUSE_IP_GET(request->cause,IL_IPI)){       /*Future use*/
         PANIC();
     }
-    if (CAUSE_IP_GET(request->cause,IL_CPUTIMER)){/*Future use*/
-        // Processor Local Timer
+    //-------------------------------------------------------------
+
+    //----------------------------------------Processor Local Timer
+    if (CAUSE_IP_GET(request->cause,IL_CPUTIMER)){  /*Future use*/
         PANIC();
     }
+    //-------------------------------------------------------------
+
+    //-----------------------------------------------Interval Timer
     if (CAUSE_IP_GET(request->cause,IL_TIMER)){
-        // Interval Timer
-        scheduler_StateToReady( request ); /*Add req to ready queue*/
-        scheduler_StateToRunning(); /*Schedule*/
-        return;
+        scheduler_StateToReady(request);  /*Add req to ready queue*/
+        scheduler_StateToRunning();       /*Schedule*/
     }
-    if (CAUSE_IP_GET(request->cause,IL_DISK)){/*Future use*/
-        // Disk Devices
+    //-------------------------------------------------------------
+
+    //-------------------------------------------------Disk Devices
+    if (CAUSE_IP_GET(request->cause,IL_DISK)){      /*Future use*/
         PANIC();
     }
-    if (CAUSE_IP_GET(request->cause,IL_TAPE)){/*Future use*/
-        // Tape Devices
+    //-------------------------------------------------------------
+
+    //-------------------------------------------------Tape Devices
+    if (CAUSE_IP_GET(request->cause,IL_TAPE)){      /*Future use*/
         PANIC();
     }
-    if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){/*Future use*/
-        // Network Devices
+    //-------------------------------------------------------------
+
+    //----------------------------------------------Network Devices
+    if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){  /*Future use*/
         PANIC();
     }
-    if (CAUSE_IP_GET(request->cause,IL_PRINTER)){/*Future use*/
-        // Printer Devices
+    //-------------------------------------------------------------
+   
+    //----------------------------------------------Printer Devices
+    if (CAUSE_IP_GET(request->cause,IL_PRINTER)){   /*Future use*/
         PANIC();
     }
-    if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){/*Future use*/
-        // Terminal Devices
+    //-------------------------------------------------------------
+   
+    //---------------------------------------------Terminal Devices
+    if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){  /*Future use*/
         PANIC();
     }
-    //----------------------------------------------------------
+    //-------------------------------------------------------------
+
     PANIC();/*interrupt not defined*/
 }

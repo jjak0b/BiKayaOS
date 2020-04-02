@@ -22,30 +22,36 @@
 #include <system/shared/shared.h>
 #include <test.h>
 
-void test_init(){
-    pcb_t* tests[ 3 ];
+void test_init(void){
+    pcb_t* tests[3];    /*PCB used for test*/
+    state_t *state;     /*Pointer to a processor state area*/
+
     int i;
-    state_t *state;
-    for(i = 0; i < 3; i++){ // il nostro n prende i valori 1,2,3 (cioè i+1)
-        tests[i] = allocPcb();
-        state = &tests[i]->p_s;
-        SetStatus( state, STATUS_NULL );
-
-        EnableInterrupts( state, TRUE );
-        EnableVirtualMemory( state, FALSE);
-        EnableKernelMode( state, TRUE);
-
-        SetSP( state, (memaddr)RAM_TOP-(FRAMESIZE * (i+1)));
+    for(i = 0; i < 3; i++){ /*Alloc PCB and initialize process*/
+        tests[i]    = allocPcb();
+        state       = &(tests[i]->p_s);
         
+        //--------------Initialize status register
+        SetStatus(state, STATUS_NULL);
+        EnableInterrupts(state, TRUE);
+        EnableVirtualMemory(state, FALSE);
+        EnableKernelMode(state, TRUE);
+        //----------------------------------------
+
+        //---------------------Set SP and priority 
+        SetSP(state, (memaddr)RAM_TOP-(FRAMESIZE * (i+1)));
         tests[i]->original_priority = i;
         tests[i]->priority          = tests[i]->original_priority;
+        //---------------------------------------
     }
 
+    //--------------------------------------Set PC 
     SetPC(&(tests[ 0 ]->p_s), (memaddr)test1);
     SetPC(&(tests[ 1 ]->p_s), (memaddr)test2);
     SetPC(&(tests[ 2 ]->p_s), (memaddr)test3);
+    //--------------------------------------------
 
     for(i = 0; i < 3; i++){
-        scheduler_AddProcess(tests[ i ]);
+        scheduler_AddProcess(tests[i]); /*Add process to ready queue*/
     }
 }

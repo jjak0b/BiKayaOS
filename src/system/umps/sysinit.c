@@ -20,7 +20,6 @@
 
 #include <system/umps/sysinit.h>
 #include <system/shared/shared.h>
-
 #include <handler/handler.h>
 
 void initAreas(void){
@@ -32,42 +31,46 @@ void initAreas(void){
 
 void initSysCallArea(void){
 	state_t *area = (state_t *) SYSBK_NEWAREA;
+	
 	STST(area);
-
-	SetPC(area, (memaddr) Handler_SysCall);
-	SetSP(area, RAM_TOP);
-
+	//----------Store PC, SP and init Status Register
+	SetPC(area,(memaddr)Handler_SysCall);
+	SetSP(area,RAM_TOP);
 	initStatusFlag(area);
+	//-----------------------------------------------
 }
 
 void initTrapArea(void){
 	state_t *area = (state_t *) PGMTRAP_NEWAREA;
+	
 	moveState((state_t *) SYSBK_NEWAREA, area);
-
+	//----------Store PC, SP and init Status Register
 	SetPC(area,(memaddr)Handler_Trap);
 	SetSP(area,RAM_TOP);
-
 	initStatusFlag(area);
+	//-----------------------------------------------
 }
 
 void initTLBArea(void){
 	state_t *area = (state_t *) TLB_NEWAREA;
-	moveState((state_t *) SYSBK_NEWAREA, area);
 
+	moveState((state_t *) SYSBK_NEWAREA, area);	
+	//----------Store PC, SP and init Status Register
 	SetPC(area,(memaddr)Handler_TLB);
 	SetSP(area,RAM_TOP);
-
 	initStatusFlag(area);
+	//-----------------------------------------------
 }
 
 void initInterruptArea(void){
 	state_t *area = (state_t *) INT_NEWAREA;
+	
 	moveState((state_t *) SYSBK_NEWAREA, area);
-
+	//----------Store PC, SP and init Status Register
 	SetPC(area,(memaddr)Handler_Interrupt);
 	SetSP(area,RAM_TOP);
-
 	initStatusFlag(area);
+	//-----------------------------------------------
 }
 
 void initStatusFlag(state_t *state){

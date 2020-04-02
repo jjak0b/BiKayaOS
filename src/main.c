@@ -20,24 +20,21 @@
 #include <system/uarm/sysinit.h>
 #endif
 
-#include <system/system.h>
-#include <pcb/pcb.h>
-#include <scheduler/scheduler.h>
-
-#include <test.h>
+#include <pcb/pcb.h>				
+#include <test.h>					
+#include <scheduler/scheduler.h>	
 
 int main(){
-	// Inizialializzazione del sistema
-	//----------------------------------------------------
+	//---------------------Inizialializzazione del sistema
 	initAreas();
-	//----------------------------------------------------
 	initPcbs();
 	scheduler_init();
-	
-	//Avvio test
 	//----------------------------------------------------
+
+	//------------------------------------------Avvio test
 	test_init();
 	scheduler_main();
 	//----------------------------------------------------
+
 	return 0;
 }

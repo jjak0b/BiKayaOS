@@ -20,9 +20,6 @@
 
 #include <system/shared/shared.h>
 
-// TODO: da spostare eventualmente in header separato
-#define STATUS_FASTINT_MODE 0x00000011
-
 void EnableInterrupts( state_t *state, int b_flag ) {
     if( b_flag ){
         state->cpsr = STATUS_DISABLE_INT( state->cpsr ); /* per ora sono supportati solo gli interrupt del timer */
