@@ -24,5 +24,5 @@
 
 void sys3_terminate(void){
     scheduler_StateToTerminate(TRUE);
-    scheduler_main();
+    scheduler_StateToRunning();
 }

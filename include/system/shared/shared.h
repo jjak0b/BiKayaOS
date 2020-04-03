@@ -13,7 +13,7 @@
 #include <system/system.h>
 #include <utilities/types.h>
 
-#define TIME_SLICE 3000 /* Time slice di CPU dedicato ad ogni processo */
+#define SET_INTERVAL_TIMER( microseconds ) ( *((word*)BUS_REG_TIMER) = (microseconds) * ( *((word*)BUS_REG_TIME_SCALE) ) )
 
 void EnableInterrupts( state_t *state, int b_flag );
 

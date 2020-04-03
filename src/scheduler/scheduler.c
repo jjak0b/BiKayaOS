@@ -53,13 +53,9 @@ int scheduler_StateToRunning(){
 		HALT();
 	}
 	scheduler->running_p = removeProcQ( &scheduler->ready_queue );
-
-	#ifdef TARGET_UARM
-		setTIMER( TIME_SLICE );
-	#endif
-	#ifdef TARGET_UMPS
-		LDIT(TIME_SLICE);
-	#endif
+	
+	/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
+	SET_INTERVAL_TIMER( TIME_SLICE );
 
 	LDST( &scheduler->running_p->p_s );
 	return -1;
@@ -89,10 +85,11 @@ int scheduler_StateToWaiting() {
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 	if( scheduler->running_p == NULL ){
-		return 1; // MANDA IN PANIC ??
+		return 1;
 	}
 
 	if( b_flag_terminate_progeny ) {
+		// rimuove la progenie dalla ready queue, poi dealloca e disassocia puntatore
 		scheduler_RemoveProgeny( scheduler->running_p );
 	}
 	else {
@@ -117,15 +114,18 @@ int scheduler_RemoveProgeny( pcb_t* p ){
 	return 0;
 }
 
-int scheduler_CreateProcess( function_t func, int priority ) {
+/* WIP */
+int scheduler_CreateProcess( memaddr func, int priority ) {
 	pcb_t* pcb = allocPcb();
 	if( pcb == NULL ) {
 		return -1;
 	}
 	SetPC( &pcb->p_s, (memaddr)func );
-	/* TODO: SetSP( ); SP dovrebbe essere dinamicamente in base al gestore della memoria */
+	/* TODO: SetSP( ); SP dovrebbe essere assegnato dinamicamente in base al gestore della memoria */
 	/* TODO: flag status, ecc ... */
+	/* i processi user dovrebbero essere sempre in user mode, quindi lo lasciamo a FALSE in attesa di più informazioni */
 	EnableKernelMode( &pcb->p_s, FALSE );
+	EnableInterrupts( &pcb->p_s, TRUE );
 
 	scheduler_AddProcess( pcb );
 	return 0;
