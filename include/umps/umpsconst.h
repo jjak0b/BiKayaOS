@@ -31,10 +31,4 @@
 #define INTERVAL_TIMER_ON     (STATUS_IM(2))
 #define INTERVAL_TIMER_OFF    (~INTERVAL_TIMER_ON)
 
-#define TOD_LO          *((unsigned int *)BUS_REG_TOD_LO)
-#define TIME_SCALE      *((unsigned int *)BUS_REG_TIME_SCALE)
-#define INTERVAL_TIMER  *((unsigned int *)BUS_REG_TIMER)
-
-#define LDIT(n) (INTERVAL_TIMER = (n*TIME_SCALE))
-
 #define CAUSE_IP_GET(cause, device) ((cause&CAUSE_IP(device)) != 0)
