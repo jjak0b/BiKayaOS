@@ -38,17 +38,17 @@ int scheduler_main() {
 }
 
 void scheduler_DoAging() {
-	struct list_head *it;
+	struct list_head *iter;
 	pcb_t *dummy;
 	if( !emptyProcQ( &scheduler->ready_queue ) ) {
-		list_for_each(it, &scheduler->ready_queue ) {
-			dummy = container_of(it, pcb_t, p_next);
+		list_for_each(iter, &scheduler->ready_queue ) {
+			dummy = container_of(iter, pcb_t, p_next);
 			dummy->priority += 1;
 		}
 	}
 }
 
-int scheduler_StateToRunning(){
+int scheduler_StateToRunning() {
 	if( emptyProcQ( &scheduler->ready_queue ) ) { 
 		HALT();
 	}
@@ -62,15 +62,15 @@ int scheduler_StateToRunning(){
 }
 
 int scheduler_StateToReady( state_t* state ) {
-	if( scheduler->running_p == NULL ){
+	if( scheduler->running_p == NULL ) {
 		return 1;
 	}
 
 	scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
 
-	moveState( state, &scheduler->running_p->p_s ); /* aggiorno lo stato del pcb con lo stato del processore fornito */
+	moveState( state, &scheduler->running_p->p_s ); /* aggiorno lo stato del pcb con lo stato fornito */
 
-	/* ripristino priorita ed inserisco nella coda */
+	/* ripristino priorità ed inserisco nella coda */
 	scheduler->running_p->priority = scheduler->running_p->original_priority;
 	scheduler_AddProcess( scheduler->running_p );
 	scheduler->running_p = NULL;
@@ -84,12 +84,12 @@ int scheduler_StateToWaiting() {
 }
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
-	if( scheduler->running_p == NULL ){
+	if( scheduler->running_p == NULL ) {
 		return 1;
 	}
 
 	if( b_flag_terminate_progeny ) {
-		// rimuove la progenie dalla ready queue, poi dealloca e disassocia puntatore
+		/* rimuove la progenie dalla ready queue, poi dealloca e disassocia puntatore */
 		scheduler_RemoveProgeny( scheduler->running_p );
 	}
 	else {
@@ -101,11 +101,11 @@ int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 	return 0;
 }
 
-int scheduler_RemoveProgeny( pcb_t* p ){
-	if( p == NULL ){
+int scheduler_RemoveProgeny( pcb_t* p ) {
+	if( p == NULL ) {
 		return 1;
 	}
-	else if( scheduler->running_p == p ){
+	else if( scheduler->running_p == p ) {
 		scheduler->running_p = NULL; /* Rimuovo il tracciante di questo descrittore attivo */
 	}
 
