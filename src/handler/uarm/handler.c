@@ -29,8 +29,6 @@ void Handler_SysCall(void){
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
 
-    request->pc += WORD_SIZE; //jump to next instruction
-
     switch(cause){
         case EXC_SYSCALL:
             handle_syscall(request);
