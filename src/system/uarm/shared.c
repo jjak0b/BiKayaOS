@@ -58,10 +58,6 @@ void SetSP( state_t *state, memaddr value ) {
     state->sp = value;
 }
 
-void SetLR( state_t *state, memaddr value ) {
-    state->lr = value;
-}
-
 void SetStatus( state_t *state, word value ) {
 	state->cpsr = value;
 }

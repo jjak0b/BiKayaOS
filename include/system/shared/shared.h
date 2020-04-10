@@ -29,8 +29,6 @@ void SetPC( state_t *state, memaddr value );
 
 void SetSP( state_t *state, memaddr value );
 
-void SetLR( state_t *state, memaddr value );
-
 /**
  * @brief Copia before in after
  * 
