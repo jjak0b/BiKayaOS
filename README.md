@@ -1,6 +1,6 @@
 # Bikaya Phase 1.5
 
-Il pacchetto scaricato contiene la fase 1.5 del progetto Bikaya (http://www.cs.unibo.it/~renzo/so/bikaya/phase1_2020.pdf) inerente il corso di Sistemi Operativi per l'AA 2019/2020.
+Il pacchetto scaricato contiene la fase 1.5 del progetto Bikaya (http://www.cs.unibo.it/~renzo/so/bikaya/phase1.5_2020.pdf) inerente il corso di Sistemi Operativi per l'AA 2019/2020.
 Il pacchetto contiene un programma compilabile sia per l'emulatore uMPS2 (https://github.com/tjonjic/umps) che uARM (https://github.com/mellotanica/uARM). 
 
 Può essere compilato sia tramite script scons sia tramite script sh (richiama scons). Ulteriori informazioni nel paragrafo "Istruzioni per la compilazione".
@@ -25,8 +25,8 @@ Digitare 'scons -c' per pulire le directory.
 
 E' possibile compilare anche utilizzando uno script compile. 
 Posizionarsi nella cartella principale di BiKaya e:
-- digitare "./compile [uarm|UARM]" per genereale il kernel per architettura uarm.
-- digitare "./compile [umps|UMPS]" per genereale il kernel per architettura umps.
+- digitare "./compile [uarm|UARM]" per generare il kernel per architettura uarm.
+- digitare "./compile [umps|UMPS]" per generare il kernel per architettura umps.
 - digitare "./compile [clean|CLEAN]" per pulire le directory.
 
 E' necessario fornire diritti di esecuzione allo script.
