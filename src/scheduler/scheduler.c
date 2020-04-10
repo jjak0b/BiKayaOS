@@ -57,7 +57,7 @@ int scheduler_StateToRunning() {
 	/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
 	SET_INTERVAL_TIMER( TIME_SLICE );
 
-	LDST( &scheduler->running_p->p_s );
+	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
 }
 
