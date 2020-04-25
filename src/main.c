@@ -20,14 +20,16 @@
 #include <system/uarm/sysinit.h>
 #endif
 
-#include <pcb/pcb.h>				
-#include <test.h>					
-#include <scheduler/scheduler.h>	
+#include <pcb/pcb.h>
+#include <asl/asl.h>
+#include <test.h>
+#include <scheduler/scheduler.h>
 
 int main(){
 	//---------------------Inizialializzazione del sistema
 	initAreas();
 	initPcbs();
+	initASL();
 	scheduler_init();
 	//----------------------------------------------------
 
