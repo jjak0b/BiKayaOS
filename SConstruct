@@ -1,5 +1,5 @@
-#--------------SConstruct per compilare BiKayaOS - Phase1.5----------------------
-#                        - Bikaya OS - Phase 1.5 -
+#--------------SConstruct per compilare BiKayaOS - Phase2----------------------
+#                        - Bikaya OS - Phase 2 -
 #    
 #	Welcome to BiKaya OS!
 #	To test kernel, just read README.md 
@@ -66,7 +66,7 @@ umps_handler_s   = handler_s + '/umps'
 # Source files list (without extension)
 #-------------------------------------------------------
 main_f      = dir_s + '/main' 
-p15test_f   = dir_s + '/p1.5test_bikaya_v0'
+p2test_f   = dir_s + '/p2test_bikaya_v0.1'
 test_f      = dir_s + '/test'
 
 # ASL Module
@@ -167,7 +167,7 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p15test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f]
+shared_noext_list = [main_f, p2test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
 uarm_noext_list   = [uarm_shared_f, uarm_handler_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm]

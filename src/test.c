@@ -21,37 +21,31 @@
 
 #include <system/shared/shared.h>
 #include <test.h>
+#include <system/const_bikaya.h>
 
 void test_init(void){
-    pcb_t* tests[3];    /*PCB used for test*/
     state_t *state;     /*Pointer to a processor state area*/
+    pcb_t *test;
+    /*Alloc PCB and initialize process*/
+    test = allocPcb();
+    state = &(test->p_s);
+    
+    //--------------Initialize status register
+    SetStatus(state, STATUS_NULL);
+    EnableInterrupts(state, TRUE);
+    EnableVirtualMemory(state, FALSE);
+    EnableKernelMode(state, TRUE);
+    //----------------------------------------
 
-    int i;
-    for(i = 0; i < 3; i++){ /*Alloc PCB and initialize process*/
-        tests[i]    = allocPcb();
-        state       = &(tests[i]->p_s);
-        
-        //--------------Initialize status register
-        SetStatus(state, STATUS_NULL);
-        EnableInterrupts(state, TRUE);
-        EnableVirtualMemory(state, FALSE);
-        EnableKernelMode(state, TRUE);
-        //----------------------------------------
-
-        //---------------------Set SP and priority 
-        SetSP(state, (memaddr)RAM_TOP-(FRAMESIZE * (i+1)));
-        tests[i]->original_priority = i;
-        tests[i]->priority          = tests[i]->original_priority;
-        //---------------------------------------
-    }
+    //---------------------Set SP and priority 
+    SetSP(state, (memaddr)RAM_TOP-FRAMESIZE);
+    test->original_priority = DEFAULT_PRIORITY;
+    test->priority          = test->original_priority;
+    //---------------------------------------
 
     //--------------------------------------Set PC 
-    SetPC(&(tests[ 0 ]->p_s), (memaddr)test1);
-    SetPC(&(tests[ 1 ]->p_s), (memaddr)test2);
-    SetPC(&(tests[ 2 ]->p_s), (memaddr)test3);
+    SetPC(&(test->p_s), (memaddr)test);
     //--------------------------------------------
 
-    for(i = 0; i < 3; i++){
-        scheduler_AddProcess(tests[i]); /*Add process to ready queue*/
-    }
+    scheduler_AddProcess(test); /*Add process to ready queue*/
 }
