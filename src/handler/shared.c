@@ -21,12 +21,14 @@
 #include <system/shared/shared.h>
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
+#include <asl/asl.h>
+#include <pcb/pcb.h>
 
-word Syscaller( word sysNo, word param1, word param2, word param3, word *returnValue ) {
+word Syscaller( state_t *state, word sysNo, word param1, word param2, word param3, word *returnValue ) {
     int b_hasReturnValue = FALSE;
     switch( sysNo ) {
         case GETCPUTIME:
-            Sys1_CetCPUTime( (word*)param1, (word*)param2, (word*)param3 );
+            Sys1_GetCPUTime( state, (word*)param1, (word*)param2, (word*)param3 );
             break;
         case CREATEPROCESS:
             b_hasReturnValue = TRUE;
@@ -40,7 +42,7 @@ word Syscaller( word sysNo, word param1, word param2, word param3, word *returnV
             Sys4_Verhogen( (int*)param1 );
             break;
         case PASSEREN:
-            Sys5_Passeren( (int*)param1 );
+            Sys5_Passeren( state, (int*)param1 );
             break;
         case WAITIO:
             b_hasReturnValue = TRUE;
@@ -62,7 +64,7 @@ word Syscaller( word sysNo, word param1, word param2, word param3, word *returnV
     return b_hasReturnValue;
 }
 
-void Sys1_CetCPUTime( word *user, word *kernel, word *wallclock ) {
+void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock ) {
     // TODO
 }
 
@@ -85,11 +87,28 @@ int Sys3_TerminateProcess( void *pid ) {
 }
 
 void Sys4_Verhogen( int* semaddr ) {
-
+    pcb_t *blocked = removeBlocked( semaddr );
+    if( blocked != NULL ) {
+        /* dovremmo ripristinare la priorità ? */
+        scheduler_AddProcess( blocked );
+    }
+    else {
+        (*semaddr) ++;
+    }
 }
 
-void Sys5_Passeren( int* semaddr ) {
+void Sys5_Passeren( state_t* state, int* semaddr ) {
+    if( *semaddr <= 0 ) {
+        scheduler_StateToWaiting( state, semaddr );    
+        // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
+        // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
 
+        // sia in caso ritorni 0 o -1 lo scheduler deve proseguire
+        scheduler_StateToRunning();
+    }
+    else {
+        (*semaddr) --;
+    }
 }
 
 int Sys6_DoIO( word command, word *devreg, int subdevice ) {

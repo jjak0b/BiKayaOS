@@ -49,11 +49,7 @@ void handle_syscall(state_t *request){
         PANIC();
     }
 
-    word returnValue;
-    int b_hasReturnValue = Syscaller( request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &returnValue );
-    if( b_hasReturnValue ) {
-        request->reg_v0 = returnValue;
-    }
+    Syscaller( request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &request->reg_v0 );
 }
 //----------------------------------------------------------------
 

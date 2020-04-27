@@ -47,11 +47,7 @@ void handle_syscall(state_t *request){
         PANIC(); // in futuro sarà da gestire come eccezione (trap) 
     }
 
-    word returnValue;
-    int b_hasReturnValue = Syscaller( request->a1, request->a2, request->a3, request->a4, &returnValue );
-    if( b_hasReturnValue ) {
-        request->v1 = returnValue;
-    }
+    Syscaller( request, request->a1, request->a2, request->a3, request->a4, &request->v1 );
 }
 //----------------------------------------------------------------
 

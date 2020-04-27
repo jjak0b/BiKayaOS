@@ -73,8 +73,17 @@ int scheduler_StateToRunning();
  */
 int scheduler_StateToReady( state_t* state );
 
-/* WIP UNCOMPLETE */
-int scheduler_StateToWaiting();
+/**
+ * @brief aggiunge il processo corrente alla ASL con associato la chiave fornita
+ * 
+ * @param state stato del processo attuale da aggiornare
+ * @param semKey chiave da associare al semaforo
+ * @return int 
+ * 			* -1 se nessun processo è attualmente assegnato come processo corrente
+ * 			* 0 se l'operazione è stata effettuata correttamente
+ * 			* 1 se non è stato possibile aggiungere il processo corrente alla ASL (impossibile allocare semaforo)
+ */
+int scheduler_StateToWaiting( state_t *state, int* semKey );
 
 /**
  * @brief Dealloca il descrittore del processo che era in esecuzione, rimuovendo eventualmente la sua progenie
@@ -87,6 +96,15 @@ int scheduler_StateToWaiting();
  * 										cioè saranno indipendenti tra loro
  */
 int scheduler_StateToTerminate( int b_flag_terminate_progeny  );
+
+/**
+ * @brief Restituisce il puntatore dell'attuale pcb_t in esecuzione
+ * 
+ * @return state_t* 
+ */
+pcb_t *scheduler_GetRunningProcess();
+
+scheduler_t *scheduler_Get();
 
 /**@WIP funzione non completata, ma sarà completato in fasi successive
  * @brief Crea un processo, aggiungendolo al ciclo di vita dello scheduler

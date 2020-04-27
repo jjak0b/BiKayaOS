@@ -23,6 +23,7 @@
 #include <utilities/types.h>
 #include <pcb/utils.h>
 #include <system/const.h>
+#include <asl/asl.h>
 
 HIDDEN scheduler_t *scheduler;
 
@@ -78,9 +79,23 @@ int scheduler_StateToReady( state_t* state ) {
 	return 0;
 }
 
-int scheduler_StateToWaiting() {
-	/* TODO */
-	return 0;
+int scheduler_StateToWaiting( state_t* state, int* semKey ) {
+	pcb_t* p = scheduler->running_p;
+	if( p == NULL ) {
+		return -1;
+	}
+	if( state != NULL ) {
+		moveState( state, &(p->p_s) );
+	}
+
+	int b_result = insertBlocked( semKey, p );
+	if( b_result ) {
+		scheduler->running_p = NULL;
+		return 0;
+	}
+	else {
+		return 1;
+	}
 }
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
@@ -112,6 +127,14 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
 	pcb_RemoveProgenyQ( p, &scheduler->ready_queue );
 
 	return 0;
+}
+
+pcb_t *scheduler_GetRunningProcess() {
+	return scheduler->running_p;
+}
+
+scheduler_t *scheduler_Get() {
+	return scheduler;
 }
 
 /* WIP */

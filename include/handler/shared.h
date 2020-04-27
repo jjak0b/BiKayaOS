@@ -8,17 +8,18 @@
  * @PostCondition valgono tutte le PostCondition delle system call
  *                inoltre,  se è gestita internamente saranno passati solo i paramentri necessari alla system call,
  *                          altrimenti se definita una SPECPASSUP saranno passati tutti i paramentri forniti
- * 
+ * @PreCondition returnValueAddr != NULL
  * @param sysno codice identificativo della system call
+ * @param currState ultimo stato del processo in esecuzione
  * @param param1 
  * @param param2 
  * @param param3 
- * @param returnValueAddr puntatore nella quale sarà assegnato il valore di ritorno ( se != NULL )
+ * @param returnValueAddr puntatore nella quale sarà assegnato il valore di ritorno
  * @return word se == 0 la system call chiamata non ha restituito alcun valore, 1 altrimenti
  */
-word Syscaller( word sysno, word param1, word param2, word param3, word *returnValueAddr );
+word Syscaller( state_t* currState, word sysno, word param1, word param2, word param3, word *returnValueAddr );
 
-void Sys1_CetCPUTime( word *user, word *kernel, word *wallclock );
+void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock );
 
 int Sys2_CreateProcess( state_t *state, int priority, void **cpid );
 
@@ -31,7 +32,7 @@ int Sys3_TerminateProcess( void *pid );
 
 void Sys4_Verhogen( int* semaddr );
 
-void Sys5_Passeren( int* semaddr );
+void Sys5_Passeren( state_t* currState, int* semaddr );
 
 int Sys6_DoIO( word command, word *devreg, int subdevice );
 
