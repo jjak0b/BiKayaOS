@@ -41,23 +41,16 @@ void Handler_SysCall(void){
 }
 
 void handle_syscall(state_t *request){
-    word sysReq     = request->a1;
     word statusReq  = request->cpsr;
-
-    if(!(sysReq>0 && sysReq<12)){    // sysCall Code non valido
-        PANIC();
-    }
 
     if((statusReq & STATUS_SYS_MODE) != STATUS_SYS_MODE){ //richiesta non soddisfacibile
         PANIC(); // in futuro sarà da gestire come eccezione (trap) 
     }
 
-    switch(sysReq){
-        case TERMINATEPROCESS:
-            sys3_terminate();
-            break;
-        default:
-            PANIC();
+    word returnValue;
+    int b_hasReturnValue = Syscaller( request->a1, request->a2, request->a3, request->a4, &returnValue );
+    if( b_hasReturnValue ) {
+        request->v1 = returnValue;
     }
 }
 //----------------------------------------------------------------

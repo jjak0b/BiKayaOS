@@ -1,10 +1,6 @@
 #ifndef H_HANDLER
 #define H_HANDLER
 
-// SysCall/BP Handler functions and define
-//-------------------------------------------------------
-#define TERMINATEPROCESS 3
-
 /**
  * @brief Gestore SYSCALL/BP. Richiama il gestore 
  * specifico per SYSCALL/BP se il registro di causa

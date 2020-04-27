@@ -43,22 +43,16 @@ void Handler_SysCall(void){
 }
 
 void handle_syscall(state_t *request){
-    word sysReq     = request->reg_a0;
     word statusReq  = request->status;
-
-    if(!(sysReq>0 && sysReq<12)){                   /*Syscall non valida*/
-        PANIC();
-    }
 
     if((statusReq&KERNELMODE_OFF)!=STATUS_NULL){    /*Richiesta non soddisfacibile*/
         PANIC();
     }
 
-    switch(sysReq){
-        case TERMINATEPROCESS:
-            sys3_terminate();
-        default: /*non dovremmo essere qui!*/
-            PANIC();
+    word returnValue;
+    int b_hasReturnValue = Syscaller( request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &returnValue );
+    if( b_hasReturnValue ) {
+        request->reg_v0 = returnValue;
     }
 }
 //----------------------------------------------------------------
