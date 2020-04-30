@@ -24,6 +24,35 @@
 #include <asl/asl.h>
 #include <pcb/pcb.h>
 
+HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
+HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
+
+void SpecPassup_init() {
+    bitmap_specPassup = 0;
+}
+
+int IsSetSpecPassup( int type ) {
+    byte mask_specPassup_type = 1 << type;
+    return (bitmap_specPassup & mask_specPassup_type) == mask_specPassup_type;
+}
+
+int SetSpecPassup( int type, state_t *area ) {
+    if( area != NULL && ( type >= 0 && type <= 2 ) && !IsSetSpecPassup( type ) ) {
+        /* copia la area corrispondente e imposta l'i-esmi bit della bitmap relativo al tipo fornito*/
+        moveState(area, &specPassup[ type ]);
+        bitmap_specPassup |= (1 << type);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+state_t *GetSpecPassup( int type ) {
+    if( IsSetSpecPassup( type ) ) {
+        return &specPassup[ type ];
+    }
+    return NULL;
+}
+
 word Syscaller( state_t *state, word sysNo, word param1, word param2, word param3, word *returnValue ) {
     int b_hasReturnValue = FALSE;
     switch( sysNo ) {
@@ -42,7 +71,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             Sys4_Verhogen( (int*)param1 );
             break;
         case PASSEREN:
-            Sys5_Passeren( state, (int*)param1 );
+            Sys5_Passeren( (int*)param1 );
             break;
         case WAITIO:
             b_hasReturnValue = TRUE;
@@ -50,15 +79,24 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case SPECPASSUP:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys7_SpecPassup( (int)param1, (state_t*)param2, (state_t*)param3 );
+            *returnValue = (int) Sys7_SpecPassup( state, (int)param1, (state_t*)param2, (state_t*)param3 );
             break;
         case GETPID:
             b_hasReturnValue = TRUE;
             *returnValue = (int) Sys8_GetPID( (void**)param1, (void**)param2 );
             break;
-        default:
-            // TODO: rendere gestibile da handler di SPECPASSUP
+        default: {
+            state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+            if( area != NULL ) {
+                LDST( area );
+            }
+            else {
+                b_hasReturnValue = TRUE;
+                *returnValue = -1;
+                scheduler_StateToTerminate( FALSE );
+            }
             break;
+        }
     }
 
     return b_hasReturnValue;
@@ -75,12 +113,13 @@ int Sys2_CreateProcess( state_t *state, int priority, void **cpid ) {
 
 int Sys3_TerminateProcess( void *pid ) {
     if( pid != NULL ) {
-        // TODO: da cambiare gestione
+        // TODO: da cambiare gestione usando PID
         scheduler_StateToTerminate(TRUE);
-        scheduler_StateToRunning();
+        return 0;
     }
     else {
-        // TODO
+        scheduler_StateToTerminate(TRUE);
+        return 0;
     }
 
     return -1;
@@ -97,27 +136,56 @@ void Sys4_Verhogen( int* semaddr ) {
     }
 }
 
-void Sys5_Passeren( state_t* state, int* semaddr ) {
+void Sys5_Passeren( int* semaddr ) {
     if( *semaddr <= 0 ) {
-        scheduler_StateToWaiting( state, semaddr );    
+        int b_result = scheduler_StateToWaiting( semaddr );    
         // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
         // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
-
+        if( b_result == 1 ) scheduler_StateToTerminate( FALSE );
         // sia in caso ritorni 0 o -1 lo scheduler deve proseguire
-        scheduler_StateToRunning();
     }
     else {
         (*semaddr) --;
     }
 }
 
-int Sys6_DoIO( word command, word *devreg, int subdevice ) {
-    // TODO
+int DeviceIsTerminal( devreg_t *devreg ) {
+    int i;
+    for( i = 0; i < N_EXT_IL; i++ ) {
+        devreg_t *test = (devreg_t*)DEV_REG_ADDR( IL_TERMINAL, i );
+        if( devreg == test ) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
+    
+    devreg_t * devreg = (devreg_t*)devregAddr;
+    if( subdevice || DeviceIsTerminal( devreg ) ) {
+        if( subdevice ) {
+            devreg->term.transm_command = command;
+        }
+        else {
+            devreg->term.recv_command = command;
+        }
+    }
+    else {
+        devreg->dtp.command = command;
+    }
+    
+    // TODO inserire questo processo in coda di attesa del device
     return -1;
 }
 
-int Sys7_SpecPassup( int type, state_t *old_area, state_t *new_area ) {
-    // TODO
+int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {
+    if( SetSpecPassup( type, new_area ) ) {
+       moveState( currState, old_area );
+       return 0;
+    }
+
+    scheduler_StateToTerminate( FALSE );
     return -1;
 }
 

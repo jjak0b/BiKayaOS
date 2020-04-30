@@ -13,6 +13,12 @@ void Handler_SysCall(void);
  * @param request Puntatore alla SYS/BP New Area
  */
 void handle_syscall(state_t *request);
+
+/**
+ * @brief Gestore specifico per BREAKPOINT.
+ * @param request Puntatore alla SYS/BP New Area
+ */
+void handle_breakpoint(state_t *request);
 //-------------------------------------------------------
 
 // Trap Handler functions and define

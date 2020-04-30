@@ -25,19 +25,23 @@
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
-void Handler_SysCall(void){
+void Handler_SysCall(void) {
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
     word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
 
+    scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato
     switch(cause){
         case EXC_SYSCALL:
             handle_syscall(request);
             break;
         case EXC_BREAKPOINT:
+            handle_breakpoint(request);
+            break;
         default: 
             PANIC();
             break;
     }
+    scheduler_schedule( FALSE ); /* fin qui può essere accaduto di tutto al processo attuale, quindi "decide" lo scheduler */
 }
 
 void handle_syscall(state_t *request){
@@ -49,12 +53,22 @@ void handle_syscall(state_t *request){
 
     Syscaller( request, request->a1, request->a2, request->a3, request->a4, &request->v1 );
 }
+
+void handle_breakpoint( state_t *request ) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+    if( area != NULL ) {
+        LDST( area );
+    }
+}
 //----------------------------------------------------------------
 
 // Trap Handler
 //----------------------------------------------------------------
 void Handler_Trap(void){
-	tprint( "ERROR: Trap currently unsupported\n" );
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC();
 }
 //----------------------------------------------------------------
@@ -62,7 +76,10 @@ void Handler_Trap(void){
 // TLB Handler
 //----------------------------------------------------------------
 void Handler_TLB(void){
-    tprint( "ERROR: TLB currently unsupported\n" );
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC();
 }
 //----------------------------------------------------------------
@@ -75,38 +92,34 @@ void Handler_Interrupt(void) {
     word excode = CAUSE_EXCCODE_GET(request->CP15_Cause);
 
     request->pc -= WORD_SIZE;
-	
+    scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato	
     if (excode != EXC_INTERRUPT) {
         PANIC();
     }
-
+    int b_force_switch = FALSE;
     if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
         // Interval Timer
-        scheduler_StateToReady( request );
-        scheduler_StateToRunning(); 
-        return;
+        b_force_switch = TRUE;
     }
-    if ( CAUSE_IP_GET(cause, INT_DISK) ) {
+    else if ( CAUSE_IP_GET(cause, INT_DISK) ) {
         // Disk Devices
-        return;
     }
-    if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
+    else if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
         // Tape Devices
-        return;
     }
-    if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
+    else if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
         // Unused
-        return;
     }
-    if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
+    else if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
         // Printer Devices
-        return;
     }
-    if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
+    else if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
         // Terminal Devices
-        return;
+    }
+    else {
+        // unhandled interrupt
+        PANIC();
     }
 
-    // unhandled interrupt
-    PANIC();
+    scheduler_schedule( b_force_switch ); 
 }

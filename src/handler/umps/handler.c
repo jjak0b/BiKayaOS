@@ -30,16 +30,19 @@ void Handler_SysCall(void){
     word cause          = CAUSE_GET_EXCCODE(request->cause);    /*Content of cause register*/
     
     request->pc_epc += WORD_SIZE; //jump to next instruction
-
+    scheduler_UpdateContext( request ); // aggiorno il contesto del processo tracciato    
     switch(cause){
         case EXC_SYS:
             handle_syscall(request);
             break;
         case EXC_BP:
-            LDST(request); /*nothing to do.. (for now)*/
+            handle_breakpoint(request);
+            break;
         default: 
             PANIC();
+            break;
     }
+    scheduler_schedule( FALSE ); /* fin qui può essere accaduto di tutto al processo attuale, quindi "decide" lo scheduler */
 }
 
 void handle_syscall(state_t *request){
@@ -49,13 +52,24 @@ void handle_syscall(state_t *request){
         PANIC();
     }
 
-    Syscaller( request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &request->reg_v0 );
+    Syscaller( request, request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &request->reg_v0 );
+}
+
+void handle_breakpoint(state_t *request) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+    if( area != NULL ) {
+        LDST( area );
+    }
 }
 //----------------------------------------------------------------
 
 // Trap Handler
 //----------------------------------------------------------------
 void Handler_Trap(void) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
@@ -63,6 +77,10 @@ void Handler_Trap(void) {
 // TLB Handler
 //----------------------------------------------------------------
 void Handler_TLB(void) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
@@ -72,59 +90,60 @@ void Handler_TLB(void) {
 void Handler_Interrupt(void) {
 	state_t *request    = (state_t *) INT_OLDAREA;
 	word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
-    
+    scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato
+    int b_force_switch = FALSE;
     if (exc_cause != EXC_INT){/*req error*/
         PANIC(); 
     }
-    
     //---------------------------------------------------Inter TODO
-    if (CAUSE_IP_GET(request->cause,IL_IPI)){       /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_IPI)){       /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
 
     //----------------------------------------Processor Local Timer
-    if (CAUSE_IP_GET(request->cause,IL_CPUTIMER)){  /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_CPUTIMER)){  /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
 
     //-----------------------------------------------Interval Timer
-    if (CAUSE_IP_GET(request->cause,IL_TIMER)){
-        scheduler_StateToReady(request);  /*Add req to ready queue*/
-        scheduler_StateToRunning();       /*Schedule*/
+    else  if (CAUSE_IP_GET(request->cause,IL_TIMER)){
+        b_force_switch = TRUE;      /*Schedule*/
     }
     //-------------------------------------------------------------
 
     //-------------------------------------------------Disk Devices
-    if (CAUSE_IP_GET(request->cause,IL_DISK)){      /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_DISK)){      /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
 
     //-------------------------------------------------Tape Devices
-    if (CAUSE_IP_GET(request->cause,IL_TAPE)){      /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_TAPE)){      /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
 
     //----------------------------------------------Network Devices
-    if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){  /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){  /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
    
     //----------------------------------------------Printer Devices
-    if (CAUSE_IP_GET(request->cause,IL_PRINTER)){   /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_PRINTER)){   /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
    
     //---------------------------------------------Terminal Devices
-    if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){  /*Future use*/
+    else if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){  /*Future use*/
         PANIC();
     }
     //-------------------------------------------------------------
-
-    PANIC();/*interrupt not defined*/
+    else {
+        PANIC();/*interrupt not defined*/
+    }
+    scheduler_schedule( b_force_switch ); /* fin qui può essere accaduto di tutto al processo attuale, quindi "decide" lo scheduler */
 }
