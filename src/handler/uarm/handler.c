@@ -82,38 +82,38 @@ void Handler_TLB(void){
 //----------------------------------------------------------------
 void Handler_Interrupt(void) {	
 	state_t *request    = (state_t *) INT_OLDAREA;
-    word cause          = cause = request->CP15_Cause;
-    word excode = CAUSE_EXCCODE_GET(request->CP15_Cause);
+    word cause          = request->CP15_Cause;
+    word excode         = CAUSE_EXCCODE_GET(request->CP15_Cause);
 
     request->pc -= WORD_SIZE;
 	
-    if (excode != EXC_INTERRUPT) {
+    if(excode != EXC_INTERRUPT){
         PANIC();
     }
 
-    if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
+    if(CAUSE_IP_GET(cause, INT_TIMER)){
         // Interval Timer
-        scheduler_StateToReady( request );
+        scheduler_StateToReady(request);
         scheduler_StateToRunning(); 
         return;
     }
-    if ( CAUSE_IP_GET(cause, INT_DISK) ) {
+    if(CAUSE_IP_GET(cause, INT_DISK)){
         // Disk Devices
         return;
     }
-    if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
+    if(CAUSE_IP_GET(cause, INT_TAPE)){
         // Tape Devices
         return;
     }
-    if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
+    if (CAUSE_IP_GET(cause, INT_UNUSED)){
         // Unused
         return;
     }
-    if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
+    if(CAUSE_IP_GET(cause, INT_PRINTER)){
         // Printer Devices
         return;
     }
-    if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
+    if(CAUSE_IP_GET(cause, INT_TERMINAL)){
         // Terminal Devices
         return;
     }
