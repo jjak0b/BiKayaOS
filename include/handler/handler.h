@@ -1,10 +1,6 @@
 #ifndef H_HANDLER
 #define H_HANDLER
 
-// SysCall/BP Handler functions and define
-//-------------------------------------------------------
-#define TERMINATEPROCESS 3
-
 /**
  * @brief Gestore SYSCALL/BP. Richiama il gestore 
  * specifico per SYSCALL/BP se il registro di causa
@@ -17,6 +13,12 @@ void Handler_SysCall(void);
  * @param request Puntatore alla SYS/BP New Area
  */
 void handle_syscall(state_t *request);
+
+/**
+ * @brief Gestore specifico per BREAKPOINT.
+ * @param request Puntatore alla SYS/BP New Area
+ */
+void handle_breakpoint(state_t *request);
 //-------------------------------------------------------
 
 // Trap Handler functions and define

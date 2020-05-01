@@ -32,35 +32,35 @@ void Handler_SysCall(void){
     word cause          = CAUSE_GET_EXCCODE(request->cause);    /*Content of cause register*/
     
     request->pc_epc += WORD_SIZE; //jump to next instruction
-
+    scheduler_UpdateContext( request ); // aggiorno il contesto del processo tracciato    
     switch(cause){
         case EXC_SYS:
             handle_syscall(request);
             break;
         case EXC_BP:
-            LDST(request); /*nothing to do.. (for now)*/
+            handle_breakpoint(request);
+            break;
         default: 
             PANIC();
+            break;
     }
+    scheduler_schedule( FALSE ); /* fin qui può essere accaduto di tutto al processo attuale, quindi "decide" lo scheduler */
 }
 
 void handle_syscall(state_t *request){
-    word sysReq     = request->reg_a0;
     word statusReq  = request->status;
-
-    if(!(sysReq>0 && sysReq<12)){                   /*Syscall non valida*/
-        PANIC();
-    }
 
     if((statusReq&KERNELMODE_OFF)!=STATUS_NULL){    /*Richiesta non soddisfacibile*/
         PANIC();
     }
 
-    switch(sysReq){
-        case TERMINATEPROCESS:
-            sys3_terminate();
-        default: /*non dovremmo essere qui!*/
-            PANIC();
+    Syscaller( request, request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &request->reg_v0 );
+}
+
+void handle_breakpoint(state_t *request) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+    if( area != NULL ) {
+        LDST( area );
     }
 }
 //----------------------------------------------------------------
@@ -68,6 +68,10 @@ void handle_syscall(state_t *request){
 // Trap Handler
 //----------------------------------------------------------------
 void Handler_Trap(void) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
@@ -75,6 +79,10 @@ void Handler_Trap(void) {
 // TLB Handler
 //----------------------------------------------------------------
 void Handler_TLB(void) {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
+    if( area != NULL ) {
+        LDST( area );
+    }
     PANIC(); /*Questa eccezione è disabilitata!*/
 }
 //----------------------------------------------------------------
@@ -93,9 +101,16 @@ void Handler_Interrupt(void) {
     if(CAUSE_IP_GET(request->cause,IL_IPI)){
         PANIC(); /*NOT SUPPORTED*/
     }
+    //-------------------------------------------------------------
+    
+    scheduler_UpdateContext(request); /* update context */
+    
     //--------------------------Processor Local Timer/Interval Timer
-    if(CAUSE_IP_GET(request->cause,IL_CPUTIMER)||CAUSE_IP_GET(request->cause,IL_TIMER)){
-        exit(request);
+    if(CAUSE_IP_GET(request->cause,IL_CPUTIMER)){
+        sheduler_shedule(FALSE);
+    }
+    if(CAUSE_IP_GET(request->cause,IL_TIMER)){
+        sheduler_shedule(TRUE);
     }
     //-------------------------------------------------------------
 
@@ -128,7 +143,7 @@ void Handler_Interrupt(void) {
             scheduler_AddProcess(p);
         }
     }
-    exit(request);
+    sheduler_shedule(FALSE);
 }
 
 int get_interrupting_line(state_t *request){
@@ -176,10 +191,5 @@ void handle_irq_terminal(devreg_t *dev_reg){
 
 void handle_irq_other_dev(devreg_t *dev_reg){
     dev_reg->dtp->command = IS_DEV_IN_ERROR(dev_reg->dtp->status) ? RESET : ACK;
-}
-
-void exit(state_t *req){
-    scheduler_StateToReady(req);    /*Add req to ready queue*/
-    scheduler_StateToRunning();     /*Schedule*/    
 }
 //------------------------------------------------------------------

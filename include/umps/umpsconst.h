@@ -19,7 +19,6 @@
 #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)
 #define RAM_TOP     (RAMBASE + RAMSIZE)
 
-#define FRAMESIZE (4096)
 
 #define STATUS_NULL          0x00000000
 #define INTERRUPT_ON          (STATUS_IEp)
