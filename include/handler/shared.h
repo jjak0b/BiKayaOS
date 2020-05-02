@@ -72,7 +72,7 @@ void Sys4_Verhogen( int* semaddr );
 
 void Sys5_Passeren( int* semaddr );
 
-int Sys6_DoIO( word command, word *devreg, int subdevice );
+void Sys6_DoIO( word command, word *devreg, int subdevice );
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area );
 

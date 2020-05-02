@@ -23,6 +23,7 @@
 #include <scheduler/scheduler.h>
 #include <asl/asl.h>
 #include <pcb/pcb.h>
+#include <system/shared/device/device.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
@@ -74,8 +75,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             Sys5_Passeren( (int*)param1 );
             break;
         case WAITIO:
-            b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys6_DoIO( param1, (word*)param2, (int)param3 );
+            Sys6_DoIO( param1, (word*)param2, (int)param3 );
             break;
         case SPECPASSUP:
             b_hasReturnValue = TRUE;
@@ -149,21 +149,16 @@ void Sys5_Passeren( int* semaddr ) {
     }
 }
 
-int DeviceIsTerminal( devreg_t *devreg ) {
-    int i;
-    for( i = 0; i < N_EXT_IL; i++ ) {
-        devreg_t *test = (devreg_t*)DEV_REG_ADDR( IL_TERMINAL, i );
-        if( devreg == test ) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
-    
+void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     devreg_t * devreg = (devreg_t*)devregAddr;
-    if( subdevice || DeviceIsTerminal( devreg ) ) {
+    int devLine, devNo;
+    device_GetInfo( devreg, &devLine, &devNo );
+
+    int *semKey = device_GetSem( devLine, devNo, subdevice );
+    if( *semKey > 0 ) {
+        --(*semKey);
+    }
+    if( devLine == IL_TERMINAL ) {
         if( subdevice ) {
             devreg->term.transm_command = command;
         }
@@ -174,13 +169,11 @@ int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     else {
         devreg->dtp.command = command;
     }
-    
-    // TODO inserire questo processo in coda di attesa del device
-    return -1;
+    scheduler_StateToWaiting( semKey );
 }
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {
-    if( SetSpecPassup( type, new_area ) ) {
+    if( !SetSpecPassup( type, new_area ) ) {
        moveState( currState, old_area );
        return 0;
     }
