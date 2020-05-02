@@ -114,23 +114,19 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
 	return 0;
 }
 
-/* WIP */
-int scheduler_CreateProcess( memaddr func, int priority ) {
-	pcb_t* pcb = allocPcb();
-	if( pcb == NULL ) {
-		return -1;
-	}
-	SetPC( &pcb->p_s, (memaddr)func );
-	/* TODO: SetSP( ); SP dovrebbe essere assegnato dinamicamente in base al gestore della memoria */
-	/* TODO: flag status, ecc ... */
-	/* i processi user dovrebbero essere sempre in user mode, quindi lo lasciamo a FALSE in attesa di più informazioni */
-	EnableKernelMode( &pcb->p_s, FALSE );
-	EnableInterrupts( &pcb->p_s, TRUE );
-
-	scheduler_AddProcess( pcb );
-	return 0;
-}
-
 void scheduler_AddProcess( pcb_t *p ) {
 	insertProcQ( &scheduler->ready_queue, p );
+}
+
+int scheduler_FindReadyProc( pcb_t *p ) {
+	struct list_head *iter;
+	pcb_t *dummy;
+
+	list_for_each( iter, &scheduler->ready_queue ) {
+			dummy = container_of( iter, pcb_t, p_next );
+			if ( dummy == p )
+				return 1;
+	}
+
+	return 0;
 }
