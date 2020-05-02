@@ -25,6 +25,7 @@
 #include <test.h>
 #include <scheduler/scheduler.h>
 #include <handler/shared.h>
+#include <system/shared/device/device.h>
 
 int main(){
 	//---------------------Inizialializzazione del sistema
@@ -32,6 +33,7 @@ int main(){
 	SpecPassup_init();
 	initPcbs();
 	initASL();
+	device_init();
 	scheduler_init();
 	//----------------------------------------------------
 

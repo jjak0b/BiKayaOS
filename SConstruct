@@ -35,6 +35,7 @@ scheduler_h     = dir_h + '/scheduler'
 system_h        = dir_h + '/system'
 sysshared_h     = system_h + '/shared'
 utilities_h     = dir_h + '/utilities'
+shared_device_h = sysshared_h + '/device'
 
 # INCLUDE dir specifiche per architettura
 uarm_h      = dir_h     + '/uarm'
@@ -54,6 +55,8 @@ pcb_s           = dir_s + '/pcb'
 scheduler_s     = dir_s + '/scheduler'
 system_s        = dir_s + '/system'
 handler_s       = dir_s + '/handler'
+sysshared_s     = system_s + '/shared'
+device_s        = sysshared_s + '/device'
 
 # SOURCE dir specifiche per architettura
 uarm_s           = dir_s     + '/uarm'
@@ -92,6 +95,9 @@ scheduler_f         = scheduler_s + '/scheduler'
 
 #System Module
 #--------------------
+
+##SHARED 
+shared_device_f     = device_s + '/device'
 ##UARM dedicated
 uarm_shared_f       = sysuarm_s + '/shared'
 uarm_sysinit_f      = sysuarm_s + '/sysinit'
@@ -152,7 +158,7 @@ uarm_ENV = Environment(
 
 # Headers lists
 #-------------------
-shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, handler_h, pcb_h, scheduler_h, utilities_h]
+shared_headers_list = [dir_h, system_h, sysshared_h, asl_h, handler_h, pcb_h, scheduler_h, utilities_h, shared_device_h ]
 uarm_headers_list   = [uarm_h, sysuarm_h, uarm_handler_h]
 umps_headers_list   = [umps_h, sysumps_h, umps_handler_h]
 
@@ -167,7 +173,7 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p2test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f]
+shared_noext_list = [main_f, p2test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f, shared_device_f ]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
 uarm_noext_list   = [uarm_shared_f, uarm_handler_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm]

@@ -22,8 +22,18 @@
 #include <handler/handler.h>
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
+#include <asl/asl.h>
 
-extern int semdev[SEM_DEV_N]; // la vera struttura dati sarà nell init.c
+#include <shared/device/device.h>
+#include <shared/device/terminal.h>
+
+int get_interrupting_line( state_t *request );
+
+int get_interrupting_device( int line );
+
+void handle_irq_terminal(devreg_t *dev_reg);
+
+void handle_irq_other_dev(devreg_t *dev_reg);
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
@@ -107,10 +117,10 @@ void Handler_Interrupt(void) {
     
     //--------------------------Processor Local Timer/Interval Timer
     if(CAUSE_IP_GET(request->cause,IL_CPUTIMER)){
-        sheduler_shedule(FALSE);
+        scheduler_schedule(FALSE);
     }
     if(CAUSE_IP_GET(request->cause,IL_TIMER)){
-        sheduler_shedule(TRUE);
+        scheduler_schedule(TRUE);
     }
     //-------------------------------------------------------------
 
@@ -134,7 +144,7 @@ void Handler_Interrupt(void) {
        handle_irq_other_dev(dev_reg);
    }
     
-    int *sem = &(semdev[GET_SEM_INDEX(dev_reg,line,dev)]); /*sem associated with device*/
+    int *sem = device_GetSem( line, dev, GET_SEM_OFFSET(dev_reg, line) ); /*sem associated with device*/
     if(++(*sem) <= 0){ /*V on this sem*/
         pcb_t *p = removeBlocked(sem);
         if(p!=NULL){
@@ -143,7 +153,7 @@ void Handler_Interrupt(void) {
             scheduler_AddProcess(p);
         }
     }
-    sheduler_shedule(FALSE);
+    scheduler_schedule(FALSE);
 }
 
 int get_interrupting_line(state_t *request){
@@ -180,16 +190,16 @@ int get_interrupting_device(int line){
 }
 
 void handle_irq_terminal(devreg_t *dev_reg){
-    if(IS_TERM_READY(dev_reg->term->transm_status)){  
+    if(IS_TERM_READY(dev_reg->term.transm_status)){  
         /* gestione del terminale di ricezione */
-        dev_reg->term->recv_command = IS_TERM_IN_ERROR(dev_reg->term->recv_status) ? RESET : ACK;
+        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
         return;
     }
     /* gestione del terminale di trasmissione */
-    dev_reg->term->transm_command = IS_TERM_IN_ERROR(dev_reg->term->transm_status) ? RESET : ACK;
+    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
 }
 
 void handle_irq_other_dev(devreg_t *dev_reg){
-    dev_reg->dtp->command = IS_DEV_IN_ERROR(dev_reg->dtp->status) ? RESET : ACK;
+    dev_reg->dtp.command = IS_DEV_IN_ERROR( (dev_reg->dtp.status) ) ? DEV_CMD_RESET : DEV_CMD_ACK;
 }
 //------------------------------------------------------------------
