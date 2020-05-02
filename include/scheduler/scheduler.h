@@ -88,17 +88,6 @@ int scheduler_StateToWaiting();
  */
 int scheduler_StateToTerminate( int b_flag_terminate_progeny  );
 
-/**@WIP funzione non completata, ma sarà completato in fasi successive
- * @brief Crea un processo, aggiungendolo al ciclo di vita dello scheduler
- * Quando il processo sarà scelto, inizierà l'esecuzine a partire dall'indirizzo di funzione fornito
- * 
- * @param func
- * @param priority
- * @... 
- * @return int 
- */
-int scheduler_CreateProcess( memaddr func, int priority );
-
 /**
  * @brief Inserisce un descrittore di processo nella ready queue
  * @PreCondition Da utilizzare solo se p non è presente nella ready queue
@@ -117,5 +106,10 @@ void scheduler_AddProcess( pcb_t *p );
  * 			* 0 altrimenti
  */
 int scheduler_RemoveProgeny( pcb_t* p );
+
+/*
+descrizione da aggiungere
+*/
+int scheduler_FindReadyProc( pcb_t *p )
 
 #endif
