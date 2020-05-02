@@ -22,6 +22,15 @@
 #include <handler/handler.h>
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
+#include <asl/asl.h>
+
+#include <shared/device/device.h>
+#include <shared/device/terminal.h>
+
+int get_interrupting_line(state_t *request);
+int get_interrupting_device(int line);
+void handle_irq_terminal(devreg_t *dev_reg);
+void handle_irq_other_dev(devreg_t *dev_reg);
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
@@ -88,38 +97,91 @@ void Handler_TLB(void){
 //----------------------------------------------------------------
 void Handler_Interrupt(void) {	
 	state_t *request    = (state_t *) INT_OLDAREA;
-    word cause          = request->CP15_Cause;
-    word excode         = CAUSE_EXCCODE_GET(request->CP15_Cause);
+    word exc_cause         = CAUSE_EXCCODE_GET(request->CP15_Cause);
 
     request->pc -= WORD_SIZE;
     scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato	
-    if (excode != EXC_INTERRUPT) {
-        PANIC();
+    if (ex_cause != EXC_INTERRUPT) {
+        PANIC(); /*REQ ERROR*/
     }
-    int b_force_switch = FALSE;
-    if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
-        // Interval Timer
-        b_force_switch = TRUE;
+	//-----------------------------------------------Interval Timer
+    if ( CAUSE_IP_GET(request->CP15_Cause, INT_TIMER) ) {
+        scheduler_schedule(TRUE);
     }
-    else if ( CAUSE_IP_GET(cause, INT_DISK) ) {
-        // Disk Devices
-    }
-    else if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
-        // Tape Devices
-    }
-    else if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
-        // Unused
-    }
-    else if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
-        // Printer Devices
-    }
-    else if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
-        // Terminal Devices
-    }
-    else {
-        // unhandled interrupt
-        PANIC();
+	//-------------------------------------------------------------
+    
+	int line;
+	int dev;	
+	if((line = get_interrupting_line(request))<0 || (dev = get_interrupting_device(line))<0){
+        PANIC(); /*something bad happens*/
     }
 
-    scheduler_schedule( b_force_switch ); 
+    devreg_t *dev_reg       = (devreg_t *) DEV_REG_ADDR(line, dev);
+    unsigned int dev_status = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+
+	if(line==INT_TERMINAL){
+       handle_irq_terminal(dev_reg);
+  	}else{
+       handle_irq_other_dev(dev_reg);
+   	}
+
+    int *sem = device_GetSem( line, dev, GET_SEM_OFFSET(dev_reg, line) ); /*sem associated with device*/
+    if(++(*sem) <= 0){ /*V on this sem*/
+        pcb_t *p = removeBlocked(sem);
+        if(p!=NULL){
+            p->p_s.a1 = dev_status;
+            /*add process to ready queue*/
+            scheduler_AddProcess(p);
+        }
+	}
+    scheduler_schedule(FALSE); 
 }
+
+
+int get_interrupting_line(state_t *request){
+	//-------------------------------------------------Disk Devices
+	if ( CAUSE_IP_GET(request->CP15_Cause, INT_DISK) ) {
+		return INT_DISK;
+    }
+	//-------------------------------------------------Tape Devices
+    if ( CAUSE_IP_GET(request->CP15_Cause, INT_TAPE) ) {
+		return INT_TAPE;
+    }
+	//-------------------------------------------------Unused Devices
+    if ( CAUSE_IP_GET(request->CP15_Cause, INT_UNUSED) ) {
+		return INT_UNUSED;
+    }
+	//-------------------------------------------------Printer Devices
+    if( CAUSE_IP_GET(request->CP15_Cause, INT_PRINTER) ) {
+        return INT_PRINTER;
+    }
+	//-------------------------------------------------Terminal Devices
+    if( CAUSE_IP_GET(request->CP15_Cause, INT_TERMINAL) ) {
+		return INT_TERMINAL;
+    }
+    return -1; /*error*/
+}
+
+int get_interrupting_device(int line){
+	 for(int i=0;i<N_DEV_PER_IL;i++){
+        if(IS_IRQ_RAISED_FROM_I(line,i)){
+            return i;
+        }
+    }
+    return -1; /*error*/
+}
+
+void handle_irq_terminal(devreg_t *dev_reg){
+    if(IS_TERM_READY(dev_reg->term.transm_status)){  
+        /* gestione del terminale di ricezione */
+        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+        return;
+    }
+    /* gestione del terminale di trasmissione */
+    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+}
+
+void handle_irq_other_dev(devreg_t *dev_reg){
+    dev_reg->dtp.command = IS_DEV_IN_ERROR( (dev_reg->dtp.status) ) ? DEV_CMD_RESET : DEV_CMD_ACK;
+}
+//------------------------------------------------------------------
