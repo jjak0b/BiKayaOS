@@ -1,10 +1,14 @@
 #ifndef H_HANDLER_SHARED
 #define H_HANDLER_SHARED
 
-/**
- * @brief Implementazione della syscall TERMINATE_PROCESS.
- * Termina il processo corrente e tutta la sua progenie.
- * Infine, richiama lo scheduler.
+/*
+descrizione da aggiungere
  */
-void sys3_terminate(void);
+int sys2_create( state_t *child_state, int child_priority, void **child_pid );
+
+/*
+descrizione da aggiungere
+ */
+int sys3_terminate( void *pid );
+
 #endif
