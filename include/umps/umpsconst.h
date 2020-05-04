@@ -19,7 +19,6 @@
 #define RAMSIZE    *((unsigned int *)BUS_REG_RAM_SIZE)
 #define RAM_TOP     (RAMBASE + RAMSIZE)
 
-#define FRAMESIZE (4096)
 
 #define STATUS_NULL          0x00000000
 #define INTERRUPT_ON          (STATUS_IEp)
@@ -31,4 +30,4 @@
 #define INTERVAL_TIMER_ON     (STATUS_IM(2))
 #define INTERVAL_TIMER_OFF    (~INTERVAL_TIMER_ON)
 
-#define CAUSE_IP_GET(cause, device) ((cause&CAUSE_IP(device)) != 0)
+#define CAUSE_IP_GET(cause, line) ((cause&CAUSE_IP(line)) != 0)

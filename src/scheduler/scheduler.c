@@ -23,6 +23,7 @@
 #include <utilities/types.h>
 #include <pcb/utils.h>
 #include <system/const.h>
+#include <asl/asl.h>
 
 HIDDEN scheduler_t *scheduler;
 
@@ -34,7 +35,7 @@ void scheduler_init() {
 }
 
 int scheduler_main() {
-	return scheduler_StateToRunning();
+	return scheduler_schedule( TRUE );
 }
 
 void scheduler_DoAging() {
@@ -48,39 +49,65 @@ void scheduler_DoAging() {
 	}
 }
 
-int scheduler_StateToRunning() {
+int scheduler_schedule( int b_force_switch ) {
 	if( emptyProcQ( &scheduler->ready_queue ) ) { 
 		HALT();
 	}
-	scheduler->running_p = removeProcQ( &scheduler->ready_queue );
+
+	int b_should_switch = b_force_switch || scheduler->b_force_switch || scheduler->running_p == NULL;
 	
-	/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
-	SET_INTERVAL_TIMER( TIME_SLICE );
+	if( b_should_switch ) {
+		scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
+
+		if( scheduler->running_p != NULL ) {
+			scheduler_StateToReady(); /* rimette nella ready, ripristiando priorità */
+		}
+		scheduler->running_p = removeProcQ( &scheduler->ready_queue );
+		/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
+		SET_INTERVAL_TIMER( TIME_SLICE );
+	}
+	else {
+		// TODO: Re-impostare time slice rimanente oppure ignorare ?
+	}
 
 	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
 }
 
-int scheduler_StateToReady( state_t* state ) {
-	if( scheduler->running_p == NULL ) {
-		return 1;
-	}
-
-	scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
-
-	moveState( state, &scheduler->running_p->p_s ); /* aggiorno lo stato del pcb con lo stato fornito */
-
-	/* ripristino priorità ed inserisco nella coda */
-	scheduler->running_p->priority = scheduler->running_p->original_priority;
-	scheduler_AddProcess( scheduler->running_p );
-	scheduler->running_p = NULL;
-
-	return 0;
+void scheduler_UpdateContext( state_t* state ) {
+	if( scheduler->running_p != NULL )
+		moveState( state, &scheduler->running_p->p_s );
 }
 
-int scheduler_StateToWaiting() {
-	/* TODO */
-	return 0;
+int scheduler_StateToReady() {
+	/* ripristino priorità ed inserisco nella coda */
+	if( scheduler->running_p != NULL ) {
+		scheduler->running_p->priority = scheduler->running_p->original_priority;
+		scheduler_AddProcess( scheduler->running_p );
+		scheduler->running_p = NULL;
+		scheduler->b_force_switch = TRUE;
+		return 0;
+	}
+	scheduler->b_force_switch = TRUE;
+	return 1;
+	
+}
+
+int scheduler_StateToWaiting( int* semKey ) {
+	pcb_t* p = scheduler->running_p;
+	if( p == NULL ) {
+		return -1;
+	}
+
+	int b_result = insertBlocked( semKey, p );
+	if( !b_result ) {
+		scheduler->running_p = NULL;
+		scheduler->b_force_switch = TRUE;
+		return 0;
+	}
+	else {
+		return 1;
+	}
 }
 
 int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
@@ -96,6 +123,7 @@ int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
 		pcb_SetChildrenParent( scheduler->running_p, NULL );
 		freePcb( scheduler->running_p );
 		scheduler->running_p = NULL;
+		scheduler->b_force_switch = TRUE;
 	}
 
 	return 0;
@@ -107,11 +135,20 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
 	}
 	else if( scheduler->running_p == p ) {
 		scheduler->running_p = NULL; /* Rimuovo il tracciante di questo descrittore attivo */
+		scheduler->b_force_switch = TRUE;
 	}
 
 	pcb_RemoveProgenyQ( p, &scheduler->ready_queue );
 
 	return 0;
+}
+
+pcb_t *scheduler_GetRunningProcess() {
+	return scheduler->running_p;
+}
+
+scheduler_t *scheduler_Get() {
+	return scheduler;
 }
 
 void scheduler_AddProcess( pcb_t *p ) {
