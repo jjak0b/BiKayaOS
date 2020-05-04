@@ -107,49 +107,58 @@ void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallcl
 }
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
-  *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+    *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
 
-  if ( *child_pid ) {
-    (*child_pid)->p_s = *child_state;
-    (*child_pid)->priority = child_priority;
-    (*child_pid)->original_priority = child_priority;
-    insertChild( scheduler_GetRunningProcess(), *child_pid );
-    scheduler_AddProcess( *child_pid );
-    return 0;
-  }
-  else
-    return (-1);
+    if ( *child_pid ) {
+        (*child_pid)->p_s = *child_state;
+        (*child_pid)->priority = child_priority;
+        (*child_pid)->original_priority = child_priority;
+        insertChild( scheduler_GetRunningProcess(), *child_pid );
+        scheduler_AddProcess( *child_pid );
+        return 0;
+    }
+    else
+        return (-1);
 }
 
-int Sys3_TerminateProcess( void *pid ) {
-  if ( pid ) {
-    if ( !(scheduler_FindReadyProc( pid )) )
-      return (-1); /* se il PCB non esiste ritorna errore */
-  }
-  else
-    pid = scheduler_GetRunningProcess();
+int Sys3_TerminateProcess( pcb_t *pid ) {
+    scheduler_t *s = getScheduler();
 
-  /* ogni processo figlio viene rimosso da un'eventuale queue di semaforo */
-  struct list_head *child_iter;
-  pcb_t *dummy;
-
-  list_for_each( child_iter, &pid->p_child ) {
-    dummy = container_of( child_iter, pcb_t, p_sib );
-    int *key = dummy->p_semkey;
-    if ( !(key) ) {
-      list_del( &dummy->p_next ); /* rimozione del PCB dalla coda dei processi bloccati */
-
-      /* aumento del valore del semaforo. se positivo si risveglia il primo in coda */
-      *key += 1;
-      if ( *key > 0 )
-        scheduler_AddProcess( removeBlocked( key ) );
+    if ( pid ) {
+        if ( !(outProcQ( &s->ready_queue, pid )) )
+            return (-1); /* se il PCB non esiste ritorna errore */
     }
-  }
+    else
+        pid = scheduler_GetRunningProcess();
 
-  scheduler_StateToTerminate( TRUE );
-  scheduler_StateToRunning();
+    /* ogni processo figlio viene rimosso da un'eventuale coda di blocco su semaforo */
+    struct list_head *child_iter;
+    pcb_t *dummy;
 
-  return 0;
+    list_for_each( child_iter, &pid->p_child ) {
+        dummy = container_of( child_iter, pcb_t, p_sib );
+        int *key = dummy->p_semkey;
+        if ( !(key) ) {
+            list_del( &dummy->p_next ); /* rimozione del PCB dalla coda dei processi bloccati */
+
+            /* aumento del valore del semaforo. se positivo si risveglia il primo in coda */
+            *key += 1;
+            if ( *key > 0 )
+                scheduler_AddProcess( removeBlocked( key ) );
+        }
+    }
+
+    /* se il processo da terminare è quello corrente, si passa il lavoro allo scheduler;
+    altrimenti il relativo pcb viene tolto dalla ready queue e inserito nella lista free */
+    if ( pid == scheduler_GetRunningProcess() ) {
+        scheduler_UpdateContext( &pid->p_s );
+        scheduler_StateToTerminate( TRUE );
+        scheduler_schedule( TRUE );
+    }
+    else {
+        freePcb( outProcQ( &s->ready_queue, pid ) );
+        return 0;
+    }
 }
 
 void Sys4_Verhogen( int* semaddr ) {

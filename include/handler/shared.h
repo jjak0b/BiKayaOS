@@ -66,7 +66,7 @@ int Sys2_CreateProcess( state_t *state, int priority, pcb_t **cpid );
  * Termina il processo corrente e tutta la sua progenie.
  * Infine, richiama lo scheduler.
  */
-int Sys3_TerminateProcess( void *pid );
+int Sys3_TerminateProcess( pcb_t *pid );
 
 void Sys4_Verhogen( int* semaddr );
 
