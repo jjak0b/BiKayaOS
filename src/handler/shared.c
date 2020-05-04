@@ -62,7 +62,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case CREATEPROCESS:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys2_CreateProcess( (state_t*)param1, (int)param2, (void**)param3 );
+            *returnValue = (int) Sys2_CreateProcess( (state_t*)param1, (int)param2, (pcb_t**)param3 );
             break;
         case TERMINATEPROCESS:
             b_hasReturnValue = TRUE;
@@ -106,7 +106,7 @@ void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallcl
     // TODO
 }
 
-int Sys2_CreateProcess( state_t *child_state, int child_priority, void **child_pid ) {
+int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
   *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
 
   if ( *child_pid ) {

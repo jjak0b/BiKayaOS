@@ -59,7 +59,7 @@ word Syscaller( state_t* currState, word sysno, word param1, word param2, word p
 
 void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock );
 
-int Sys2_CreateProcess( state_t *state, int priority, void **cpid );
+int Sys2_CreateProcess( state_t *state, int priority, pcb_t **cpid );
 
 /**
  * @brief Implementazione della syscall TERMINATE_PROCESS.
