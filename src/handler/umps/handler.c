@@ -26,6 +26,7 @@
 
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
+#include <utilities/semaphore.h>
 
 int get_interrupting_line( state_t *request );
 
@@ -145,13 +146,9 @@ void Handler_Interrupt(void) {
    }
     
     int *sem = device_GetSem( line, dev, GET_SEM_OFFSET(dev_reg, line) ); /*sem associated with device*/
-    if(++(*sem) <= 0){ /*V on this sem*/
-        pcb_t *p = removeBlocked(sem);
-        if(p!=NULL){
-            p->p_s.reg_v0 = dev_status;
-            /*add process to ready queue*/
-            scheduler_AddProcess(p);
-        }
+    pcb_t *p = semaphore_V( sem );
+    if( p != NULL ){
+        p->p_s.reg_v0 = dev_status;
     }
     scheduler_schedule(FALSE);
 }

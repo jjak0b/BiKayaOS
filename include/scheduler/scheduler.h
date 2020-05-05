@@ -144,6 +144,16 @@ int scheduler_CreateProcess( memaddr func, int priority );
 void scheduler_AddProcess( pcb_t *p );
 
 /**
+ * @brief Rimuove il descrittore di processo dalla ready queue ed eventualmente disassocia il processo attuale, se è lo stesso pcb fornito
+ * 
+ * @param p pcb da rimuovere dallo scheduler
+ * @return int 
+ *          TRUE se è stato rimosso con successo
+ *          FALSE se non è presente nella ready queue
+ */
+int scheduler_RemoveProcess( pcb_t *p );
+
+/**
  * @brief 	wrapper di pcb_RemoveProgenyQ con passata la ready queue dello scheduler
  * @PostCondition 	Se p è il processo in esecuzione allora viene deassociato nella struttura dello scheduler e deallocato.
  * 					Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.

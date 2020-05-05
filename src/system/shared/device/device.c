@@ -4,7 +4,10 @@
 HIDDEN int _semdev[SEM_DEV_N];
 
 void device_init() {
-
+    /* semafori device inizializzati a 0, in modo che attendano fino alla risposta (interrupt) */
+    int i;
+    for( i = 0; i < SEM_DEV_N; i++ )
+        _semdev[ i ] = 0;
 }
 
 void device_GetInfo( devreg_t *devreg, int *_line, int *_devNo ) {
