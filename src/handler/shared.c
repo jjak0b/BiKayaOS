@@ -108,15 +108,20 @@ void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallcl
 }
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
-    *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+    /* prima di eseguire viene controllata la validità dei puntatori forniti */
+    if ( child_state && child_pid ) {
+        *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
 
-    if ( *child_pid ) {
-        (*child_pid)->p_s = *child_state;
-        (*child_pid)->priority = child_priority;
-        (*child_pid)->original_priority = child_priority;
-        insertChild( scheduler_GetRunningProcess(), *child_pid );
-        scheduler_AddProcess( *child_pid );
-        return 0;
+        if ( *child_pid ) {
+            (*child_pid)->p_s = *child_state;
+            (*child_pid)->priority = child_priority;
+            (*child_pid)->original_priority = child_priority;
+            insertChild( scheduler_GetRunningProcess(), *child_pid );
+            scheduler_AddProcess( *child_pid );
+            return 0;
+        }
+        else
+            return (-1);
     }
     else
         return (-1);
@@ -126,7 +131,7 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
     scheduler_t *s = getScheduler();
 
     if ( pid ) {
-        if ( !(outProcQ( &s->ready_queue, pid )) )
+        if ( outProcQ( &s->ready_queue, pid ) == NULL )
             return (-1); /* se il PCB non esiste ritorna errore */
     }
     else
@@ -139,7 +144,7 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
     list_for_each( child_iter, &pid->p_child ) {
         dummy = container_of( child_iter, pcb_t, p_sib );
         int *key = dummy->p_semkey;
-        if ( !(key) ) {
+        if ( key ) {
             list_del( &dummy->p_next ); /* rimozione del PCB dalla coda dei processi bloccati */
 
             /* aumento del valore del semaforo. se positivo si risveglia il primo in coda */
@@ -160,6 +165,8 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
         freePcb( outProcQ( &s->ready_queue, pid ) );
         return 0;
     }
+
+    return (-1); /* ??? */
 }
 
 void Sys4_Verhogen( int* semaddr ) {

@@ -59,12 +59,23 @@ word Syscaller( state_t* currState, word sysno, word param1, word param2, word p
 
 void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock );
 
-int Sys2_CreateProcess( state_t *state, int priority, pcb_t **cpid );
+/**
+ * @brief Implementazione della syscall CHILD_PRIORITY
+ * Crea un processo come figlio del chiamante
+ * Ritorna errore se non ci sono più PCB disponibili
+ * @param child_state 
+ * @param child_priority 
+ * @param child_pid 
+ * @return int 
+ */
+int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid );
 
 /**
  * @brief Implementazione della syscall TERMINATE_PROCESS.
  * Termina il processo corrente e tutta la sua progenie.
  * Infine, richiama lo scheduler.
+ * @param pid 
+ * @return int 
  */
 int Sys3_TerminateProcess( pcb_t *pid );
 
