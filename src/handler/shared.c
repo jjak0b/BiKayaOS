@@ -24,6 +24,7 @@
 #include <asl/asl.h>
 #include <pcb/pcb.h>
 #include <system/shared/device/device.h>
+#include <utilities/semaphore.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
@@ -162,26 +163,16 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
 }
 
 void Sys4_Verhogen( int* semaddr ) {
-    pcb_t *blocked = removeBlocked( semaddr );
-    if( blocked != NULL ) {
-        /* dovremmo ripristinare la priorità ? */
-        scheduler_AddProcess( blocked );
-    }
-    else {
-        (*semaddr) ++;
-    }
+    semaphore_V( semaddr );
+    /* dovremmo ripristinare la priorità ? */
 }
 
 void Sys5_Passeren( int* semaddr ) {
-    if( *semaddr <= 0 ) {
-        int b_result = scheduler_StateToWaiting( semaddr );    
-        // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
-        // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
-        if( b_result == 1 ) scheduler_StateToTerminate( FALSE );
-        // sia in caso ritorni 0 o -1 lo scheduler deve proseguire
-    }
-    else {
-        (*semaddr) --;
+    int status = semaphore_P( semaddr, scheduler_GetRunningProcess() );
+    // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
+    // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
+    if( status == 1 ) {
+        scheduler_StateToTerminate( FALSE );
     }
 }
 
@@ -191,9 +182,12 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     device_GetInfo( devreg, &devLine, &devNo );
 
     int *semKey = device_GetSem( devLine, devNo, subdevice );
-    if( *semKey > 0 ) {
-        --(*semKey);
+    // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
+    int b_error = semaphore_P( semKey, scheduler_GetRunningProcess() );
+    if( b_error ) {
+        scheduler_StateToTerminate( FALSE );
     }
+    
     if( devLine == IL_TERMINAL ) {
         if( subdevice ) {
             devreg->term.transm_command = command;
@@ -205,7 +199,6 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     else {
         devreg->dtp.command = command;
     }
-    scheduler_StateToWaiting( semKey );
 }
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {

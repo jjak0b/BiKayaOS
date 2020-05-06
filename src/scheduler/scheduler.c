@@ -167,3 +167,13 @@ int scheduler_FindReadyProc( pcb_t *p ) {
 
 	return 0;
 }
+int scheduler_RemoveProcess( pcb_t *p ) {
+	if( scheduler->running_p == p ) { /* rimuove quello attuale */
+		scheduler->running_p = NULL;
+		scheduler->b_force_switch = TRUE;
+		return TRUE;
+	}
+	else { /* rimuove dalla coda */
+		return NULL != outProcQ( &(scheduler->ready_queue), p );
+	}
+}

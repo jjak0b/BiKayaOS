@@ -57,6 +57,7 @@ system_s        = dir_s + '/system'
 handler_s       = dir_s + '/handler'
 sysshared_s     = system_s + '/shared'
 device_s        = sysshared_s + '/device'
+utilities_f     = dir_s + '/utilities'
 
 # SOURCE dir specifiche per architettura
 uarm_s           = dir_s     + '/uarm'
@@ -93,6 +94,8 @@ pcb_utils_f         = pcb_s + '/utils'
 #--------------------
 scheduler_f         = scheduler_s + '/scheduler'
 
+# Utilities Module
+util_semaphore_f    = utilities_f + '/semaphore'
 #System Module
 #--------------------
 
@@ -173,7 +176,7 @@ for i,x in enumerate(umps_headers_list):
 
 # Source (NOEXT) lists
 #-------------------
-shared_noext_list = [main_f, p2test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f, shared_device_f ]
+shared_noext_list = [main_f, p2test_f, test_f, handler_f, scheduler_f, pcb_f, pcb_utils_f, asl_f, shared_device_f, util_semaphore_f ]
 
 # Per favore, lascia i file crtso____ e lib_____ per ultimi
 uarm_noext_list   = [uarm_shared_f, uarm_handler_f, uarm_sysinit_f, crtso_uarm, libuarm, libdiv_uarm]
