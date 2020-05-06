@@ -76,5 +76,11 @@ void Sys6_DoIO( word command, word *devreg, int subdevice );
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area );
 
-int Sys8_GetPID( void **pid, void **ppid );
+/**
+ * @brief assegna pid il puntatore al processo corrente, a ppid il puntatore al processo genitore
+ * @param pid 
+ * @param ppid 
+ * @return int 
+ */
+int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
 #endif

@@ -211,7 +211,10 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
     return -1;
 }
 
-int Sys8_GetPID( void **pid, void **ppid ) {
-    // TODO
-    return -1;
+int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
+    if ( !pid )
+        *pid = scheduler_GetRunningProcess();
+    if ( !ppid )
+        *ppid = (*pid)->p_parent;
+    return 0;
 }
