@@ -155,18 +155,6 @@ void scheduler_AddProcess( pcb_t *p ) {
 	insertProcQ( &scheduler->ready_queue, p );
 }
 
-int scheduler_FindReadyProc( pcb_t *p ) {
-	struct list_head *iter;
-	pcb_t *dummy;
-
-	list_for_each( iter, &scheduler->ready_queue ) {
-			dummy = container_of( iter, pcb_t, p_next );
-			if ( dummy == p )
-				return 1;
-	}
-
-	return 0;
-}
 int scheduler_RemoveProcess( pcb_t *p ) {
 	if( scheduler->running_p == p ) { /* rimuove quello attuale */
 		scheduler->running_p = NULL;

@@ -154,9 +154,4 @@ int scheduler_RemoveProcess( pcb_t *p );
  */
 int scheduler_RemoveProgeny( pcb_t* p );
 
-/*
-descrizione da aggiungere
-*/
-int scheduler_FindReadyProc( pcb_t *p )
-
 #endif
