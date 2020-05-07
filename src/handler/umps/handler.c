@@ -144,8 +144,19 @@ void handle_irq(unsigned int line, unsigned int dev){
    (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
     
     int *sem = device_GetSem(line, dev, GET_SEM_OFFSET(dev_reg, line)); /*sem associated with device*/
-    pcb_t *p = semaphore_V(sem);
-    if(p != NULL){
-        p->p_s.reg_v0 = dev_status;
-    }
+    pcb_t *p = NULL;
+
+    /* 
+        Rispode a tutti i processi in attesa, con lo stesso stato.
+        Lo status probabilmente andrà in collisione con gli altri se sono > 1
+        ora come ora il processo che manda il comando non aspetta che il terminale sia pronto,
+        a meno che si gestito da un semaforo di livello superiore ( tramite syscall )
+    */
+
+    do {
+        p = semaphore_V(sem);
+        if(p != NULL){
+            p->p_s.reg_v0 = dev_status;
+        }
+    } while( p != NULL && *sem < 0 );
 }

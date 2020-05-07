@@ -19,8 +19,10 @@ pcb_t *semaphore_V( int *semkey ) {
     pcb_t *p = NULL;
     if( ++(*semkey) <= 0 ) {
         p = removeBlocked( semkey );
-        if( p != NULL )
+        if( p != NULL ){
+            p->p_semkey = NULL;
             scheduler_AddProcess( p );
+        }
     }
     return p;
 }

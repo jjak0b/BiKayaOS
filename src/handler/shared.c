@@ -95,7 +95,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             else {
                 b_hasReturnValue = TRUE;
                 *returnValue = -1;
-                scheduler_StateToTerminate( FALSE );
+                scheduler_StateToTerminate( NULL, FALSE );
             }
             break;
         }
@@ -129,41 +129,8 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
 }
 
 int Sys3_TerminateProcess( pcb_t *pid ) {
-    scheduler_t *s = scheduler_Get();
-
-    if ( pid ) {
-        if ( outProcQ( &s->ready_queue, pid ) == NULL )
-            return (-1); /* se il PCB non esiste ritorna errore */
-    }
-    else
-        pid = scheduler_GetRunningProcess();
-
-    /* ogni processo figlio viene rimosso da un'eventuale coda di blocco su semaforo */
-    struct list_head *child_iter;
-    pcb_t *dummy;
-
-    
-    list_for_each( child_iter, &pid->p_child ) {
-        dummy = container_of( child_iter, pcb_t, p_sib );
-        int *key = dummy->p_semkey;
-        if ( key ) {
-            list_del( &dummy->p_next ); /* rimozione del PCB dalla coda dei processi bloccati */
-
-            /* aumento del valore del semaforo. se positivo si risveglia il primo in coda */
-            *key += 1;
-            if ( *key > 0 )
-                scheduler_AddProcess( removeBlocked( key ) );
-        }
-    }
-
-    /* se il processo da terminare è quello corrente, si passa il lavoro allo scheduler;
-    altrimenti il relativo pcb viene tolto dalla ready queue e inserito nella lista free */
-    if ( pid == scheduler_GetRunningProcess() )
-        scheduler_StateToTerminate( TRUE );
-    else
-        freePcb( outProcQ( &s->ready_queue, pid ) );
-
-    return 0;
+    int b_error = scheduler_StateToTerminate( pid, TRUE );
+    return ( b_error ? -1 : 0 );
 }
 
 void Sys4_Verhogen( int* semaddr ) {
@@ -172,11 +139,12 @@ void Sys4_Verhogen( int* semaddr ) {
 }
 
 void Sys5_Passeren( int* semaddr ) {
-    int status = semaphore_P( semaddr, scheduler_GetRunningProcess() );
+    pcb_t *pid = scheduler_GetRunningProcess();
+    int status = semaphore_P( semaddr, pid );
     // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
     // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
     if( status == 1 ) {
-        scheduler_StateToTerminate( FALSE );
+        scheduler_StateToTerminate( pid, FALSE );
     }
 }
 
@@ -186,10 +154,11 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     device_GetInfo( devreg, &devLine, &devNo );
 
     int *semKey = device_GetSem( devLine, devNo, subdevice );
+    pcb_t *pid = scheduler_GetRunningProcess();
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
-    int b_error = semaphore_P( semKey, scheduler_GetRunningProcess() );
+    int b_error = semaphore_P( semKey, pid );
     if( b_error ) {
-        scheduler_StateToTerminate( FALSE );
+        scheduler_StateToTerminate( pid, FALSE );
     }
     
     if( devLine == IL_TERMINAL ) {
@@ -211,7 +180,7 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
        return 0;
     }
 
-    scheduler_StateToTerminate( FALSE );
+    scheduler_StateToTerminate( NULL, FALSE );
     return -1;
 }
 

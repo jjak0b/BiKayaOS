@@ -103,18 +103,18 @@ int scheduler_StateToReady();
 int scheduler_StateToWaiting( int* semKey );
 
 /**
- * @brief Dealloca il descrittore del processo che era in esecuzione, rimuovendo eventualmente la sua progenie
- * 
+ * @brief Dealloca il descrittore del processo associato al pid fornito, rimuovendo eventualmente la sua progenie
  * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale
  * @PostCondition Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
  * @return int 
- * 			* 1 se non c'è alcun processo tracciato dallo scheduler in esecuzione
+ * 			* 1 se pid == NULL e non c'è alcun processo tracciato dallo scheduler in esecuzione
  * 			* 0 altrimenti se è avvenuto tutto correttamente
- * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue il descrittore del processo in esecuzione e tutta la sua progenie,
+ * @param pid identificatore del processo da terminare, se == NULL sarà considerato il processo attualmente in esecuzione
+ * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue o dalla semd wait queue il descrittore del processo in esecuzione e tutta la sua progenie,
  * 									Se FALSE rimuove e dealloca solo il descrittore in esecuzione, ma tutti i suoi figli non avranno padre e ogni figlio non avrà fratelli
  * 										cioè saranno indipendenti tra loro
  */
-int scheduler_StateToTerminate( int b_flag_terminate_progeny  );
+int scheduler_StateToTerminate( pcb_t* pid, int b_flag_terminate_progeny );
 
 /**
  * @brief Restituisce il puntatore dell'attuale pcb_t in esecuzione
@@ -143,9 +143,9 @@ void scheduler_AddProcess( pcb_t *p );
 int scheduler_RemoveProcess( pcb_t *p );
 
 /**
- * @brief 	wrapper di pcb_RemoveProgenyQ con passata la ready queue dello scheduler
- * @PostCondition 	Se p è il processo in esecuzione allora viene deassociato nella struttura dello scheduler e deallocato.
- * 					Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.
+ * @brief   Dealloca dopo aver rimosso il descrittore fornito e tutta la sua progenie dalla ready queue o dalla wait queue del semaforo associato al pcb
+ *          Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.
+ * @PostCondition 	Se p o uno della sua progenie è il processo in esecuzione allora viene deassociato nella struttura dello scheduler e deallocato anche esso.
  * 
  * @param p descrittore del processo da cui partire a rimuovere la progenie
  * @return int 

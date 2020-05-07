@@ -110,36 +110,97 @@ int scheduler_StateToWaiting( int* semKey ) {
 	}
 }
 
-int scheduler_StateToTerminate( int b_flag_terminate_progeny ) {
-	if( scheduler->running_p == NULL ) {
-		return 1;
-	}
+/**
+ * @brief Rimuove il processo come processo corrente, altrimenti dalla wait queue, altrimenti ancora se non è presente lo rimuove dalla ready queue
+ * @PostCondition Se viene rimosso dalla wait queue di un semaforo, incrementa il valore del semaforo stesso, quindi il suo p_semkey diventa NULL
+ * 
+ * @param p il processo da rimuovere
+ */
+void scheduler_RemoveProcessFromAnyQ( pcb_t *p ) {
+	pcb_t *removed = NULL;
 
-	if( b_flag_terminate_progeny ) {
-		/* rimuove la progenie dalla ready queue, poi dealloca e disassocia puntatore */
-		scheduler_RemoveProgeny( scheduler->running_p );
-	}
-	else {
-		pcb_SetChildrenParent( scheduler->running_p, NULL );
-		freePcb( scheduler->running_p );
+	if( p == scheduler->running_p ) {
 		scheduler->running_p = NULL;
 		scheduler->b_force_switch = TRUE;
+		removed = p;
+	}
+	/* Rimuovo dalla wait queue V() */
+	else if( p->p_semkey != NULL) {
+		removed = outBlocked( p );
+		if( removed != NULL ) {
+			++(*p->p_semkey);
+			removed->p_semkey = NULL;
+		}
+	}
+	/* Rimuovo dalla ready queue */
+	else if( removed == NULL ) {
+		removed = outProcQ( &(scheduler->ready_queue), p );
+	}
+}
+
+int scheduler_StateToTerminate( pcb_t *pid, int b_flag_terminate_progeny ) {
+	if( pid == NULL ) {
+		pid = scheduler->running_p;
+	}
+
+	if( pid == NULL ) {
+		return 1;
+	}
+	/* Lo scollego dal padre */
+	outChild( pid );
+
+	if( b_flag_terminate_progeny ) {
+		scheduler_RemoveProgeny( pid );
+	}
+	else {
+		scheduler_RemoveProcessFromAnyQ( pid );
+		pcb_SetChildrenParent( pid, NULL );
+		freePcb( pid );
 	}
 
 	return 0;
 }
 
 int scheduler_RemoveProgeny( pcb_t* p ) {
-	if( p == NULL ) {
-		return 1;
-	}
-	else if( scheduler->running_p == p ) {
-		scheduler->running_p = NULL; /* Rimuovo il tracciante di questo descrittore attivo */
-		scheduler->b_force_switch = TRUE;
-	}
+	/*
+	 * asl::outChildBlocked sarebbe inefficiente - 
+	 * dovrei processare se stessa, e visitare nuovamente l'intero albero di processi per fare V() e rimuovere ogni PCB
+	 */
 
-	pcb_RemoveProgenyQ( p, &scheduler->ready_queue );
+	if( p == NULL )
+        return 1;
+	
+	LIST_HEAD( pcb_stack );
+	pcb_t
+		*parent = p;
 
+    /*
+	 * Ricorsivamente per ogni processo figlio dell intero albero:
+     * Ogni processo rimuove da una coda i figli e li aggiunge ad uno stack di lavoro
+     * e poi elimina il padre appena elaborato dallo stack per deallocarlo
+     */
+	
+	scheduler_RemoveProcessFromAnyQ( parent );
+	list_add( &p->p_next, &pcb_stack );
+	
+	while( !list_empty( &pcb_stack ) ) {
+		struct list_head *it_parent = list_next( &pcb_stack );
+		parent = container_of( it_parent, pcb_t, p_next );
+
+		/* Aggiungo i figli sullo stack */
+		while( !emptyChild( parent ) ){
+			pcb_t* child = removeChild( parent );
+
+			/* Devo elaborarlo qui altrimenti poco dopo lo "stacco" dalla lista in cui risiede */
+			scheduler_RemoveProcessFromAnyQ( child );
+
+			list_add( &child->p_next, &pcb_stack );
+		}
+
+		/* Elimino il genitore */
+		list_del( &parent->p_next );
+		freePcb( parent );
+	}
 	return 0;
 }
 
