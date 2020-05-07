@@ -23,7 +23,6 @@
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
 #include <asl/asl.h>
-
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
 
@@ -96,7 +95,7 @@ void Handler_Interrupt(void) {
     word exc_cause         = CAUSE_EXCCODE_GET(request->CP15_Cause);
     request->pc -= WORD_SIZE;
     	
-    if (ex_cause != EXC_INTERRUPT) {
+    if (exc_cause != EXC_INTERRUPT) {
         PANIC(); /*REQ ERROR*/
     }
 

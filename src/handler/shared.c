@@ -24,6 +24,7 @@
 #include <asl/asl.h>
 #include <pcb/pcb.h>
 #include <system/shared/device/device.h>
+#include <shared/device/terminal.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */

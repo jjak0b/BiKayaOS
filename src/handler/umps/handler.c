@@ -23,7 +23,6 @@
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
 #include <asl/asl.h>
-
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
 
