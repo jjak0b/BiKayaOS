@@ -128,7 +128,7 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
 }
 
 int Sys3_TerminateProcess( pcb_t *pid ) {
-    scheduler_t *s = getScheduler();
+    scheduler_t *s = scheduler_Get();
 
     if ( pid ) {
         if ( outProcQ( &s->ready_queue, pid ) == NULL )
@@ -156,17 +156,12 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
 
     /* se il processo da terminare è quello corrente, si passa il lavoro allo scheduler;
     altrimenti il relativo pcb viene tolto dalla ready queue e inserito nella lista free */
-    if ( pid == scheduler_GetRunningProcess() ) {
-        scheduler_UpdateContext( &pid->p_s );
+    if ( pid == scheduler_GetRunningProcess() )
         scheduler_StateToTerminate( TRUE );
-        scheduler_schedule( TRUE );
-    }
-    else {
+    else
         freePcb( outProcQ( &s->ready_queue, pid ) );
-        return 0;
-    }
 
-    return (-1); /* ??? */
+    return 0;
 }
 
 void Sys4_Verhogen( int* semaddr ) {
@@ -219,9 +214,17 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
 }
 
 int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
-    if ( !pid )
+    /* la procedura ritorna errore in caso di puntatori non validi */
+    if ( pid && ppid ) {
         *pid = scheduler_GetRunningProcess();
-    if ( !ppid )
-        *ppid = (*pid)->p_parent;
-    return 0;
+
+        if ( *pid )
+             *ppid = (*pid)->p_parent;
+        else
+            return (-1);
+        
+        return 0;
+    }
+
+    return (-1);
 }
