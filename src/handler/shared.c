@@ -25,12 +25,6 @@
 #include <pcb/pcb.h>
 #include <system/shared/device/device.h>
 
-int get_interrupting_line(word cause);
-int get_interrupting_device(int line);
-void handle_irq_terminal(devreg_t *dev_reg);
-void handle_irq_other_dev(devreg_t *dev_reg);
-
-
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
 
