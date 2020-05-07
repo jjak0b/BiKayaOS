@@ -113,6 +113,12 @@ int get_interrupting_line(word cause);
 int get_interrupting_device(int line);
 
 /**
+ * @brief Gestore per interrupt device. Richiama i metodi sottostanti in base
+ * al parametro line
+ */
+void handle_irq(unsigned int line, unsigned int dev);
+
+/**
  * @brief Gestione per i terminali di ricezione e trasmissione. Se è presente un codice di errore nello status del terminale 
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
  * @param puntatore al device register

@@ -44,7 +44,7 @@ void Handler_SysCall(void){
             break;
         default: 
             PANIC();
-            break;
+            break; // (from sds) non necessario; è l'ultimo case
     }
     scheduler_schedule( FALSE ); /* fin qui può essere accaduto di tutto al processo attuale, quindi "decide" lo scheduler */
 }
@@ -74,7 +74,7 @@ void Handler_Trap(void) {
     if( area != NULL ) {
         LDST( area );
     }
-    PANIC(); /*Questa eccezione è disabilitata!*/
+    PANIC(); /*Questa eccezione è disabilitata!*/ 
 }
 //----------------------------------------------------------------
 
@@ -100,20 +100,18 @@ void Handler_Interrupt(void) {
         PANIC(); /*REQ ERROR*/
     }
 
-    //----------------------------------------------Inter-processor
-    if(CAUSE_IP_GET(cause, IL_IPI)){
-        PANIC(); /*NOT SUPPORTED*/
+    //----------------Inter-processor irq/Processor Local Timer irq
+    if(CAUSE_IP_GET(cause, IL_IPI) || CAUSE_IP_GET(cause, IL_CPUTIMER)){
+        PANIC(); /*NOT USED*/
     }
     //-------------------------------------------------------------
-    
+
     scheduler_UpdateContext(request); /* update context */
-    
-    //--------------------------Processor Local Timer/Interval Timer
-    if(CAUSE_IP_GET(cause, IL_CPUTIMER)){
-        scheduler_schedule(FALSE);
-    }
+    int irq_served    = FALSE;
+    int force_switch  = FALSE;
+    //-------------------------------------------Interval Timer irq
     if(CAUSE_IP_GET(cause, IL_TIMER)){
-        scheduler_schedule(TRUE);
+        force_switch = irq_served = TRUE;
     }
     //-------------------------------------------------------------
 
@@ -122,25 +120,32 @@ void Handler_Interrupt(void) {
     * it  is  also  necessary  to  identify  the specific device that 
     * generated the interrupt.
     */
-    int line;
-    int dev;
-    if((line = get_interrupting_line(cause))<0 || (dev = get_interrupting_device(line))<0){
-        PANIC(); /*something bad happens*/
+    unsigned int dev_line;
+    unsigned int dev;
+    for(dev_line=0; dev_line<N_EXT_IL;dev_line++){
+        for(dev=0; dev_line<N_DEV_PER_IL;dev++){
+            if(IRQ_FROM(dev_line,dev)){
+                handle_irq(dev_line+3,dev);
+                irq_served = TRUE;
+            }
+        }
+    }
+    if(!irq_served){
+        PANIC(); /*irq but no interrupt served?*/
     }
 
-    devreg_t *dev_reg       = (devreg_t *) DEV_REG_ADDR(line, dev);
-    unsigned int dev_status = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+    scheduler_schedule(force_switch);
+}
 
-   if(line==IL_TERMINAL){
-       handle_irq_terminal(dev_reg);
-   }else{
-       handle_irq_other_dev(dev_reg);
-   }
+void handle_irq(unsigned int line, unsigned int dev){
+    devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
+    word dev_status     = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+
+   (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
     
-    int *sem = device_GetSem( line, dev, GET_SEM_OFFSET(dev_reg, line) ); /*sem associated with device*/
-    pcb_t *p = semaphore_V( sem );
-    if( p != NULL ){
+    int *sem = device_GetSem(line, dev, GET_SEM_OFFSET(dev_reg, line)); /*sem associated with device*/
+    pcb_t *p = semaphore_V(sem);
+    if(p != NULL){
         p->p_s.reg_v0 = dev_status;
     }
-    scheduler_schedule(FALSE);
 }
