@@ -84,7 +84,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case GETPID:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys8_GetPID( (void**)param1, (void**)param2 );
+            *returnValue = (int) Sys8_GetPID( (pcb_t**)param1, (pcb_t**)param2 );
             break;
         default: {
             state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
@@ -110,7 +110,7 @@ void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallcl
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
     /* prima di eseguire viene controllata la validità dei puntatori forniti */
     if ( child_state && child_pid ) {
-        *child_pid = allocPCB(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+        *child_pid = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
 
         if ( *child_pid ) {
             (*child_pid)->p_s = *child_state;
