@@ -114,7 +114,7 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
         *child_pid = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
 
         if ( *child_pid ) {
-            (*child_pid)->p_s = *child_state;
+            moveState( child_state, &(*child_pid)->p_s );
             (*child_pid)->priority = child_priority;
             (*child_pid)->original_priority = child_priority;
             insertChild( scheduler_GetRunningProcess(), *child_pid );
@@ -142,6 +142,7 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
     struct list_head *child_iter;
     pcb_t *dummy;
 
+    
     list_for_each( child_iter, &pid->p_child ) {
         dummy = container_of( child_iter, pcb_t, p_sib );
         int *key = dummy->p_semkey;
