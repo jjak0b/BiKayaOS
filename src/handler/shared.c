@@ -274,5 +274,5 @@ void handle_irq_terminal(devreg_t *dev_reg){
 }
 
 void handle_irq_other_dev(devreg_t *dev_reg){
-    dev_reg->dtp.command = IS_DEV_IN_ERROR( (dev_reg->dtp.status) ) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_reg->dtp.status) ? DEV_CMD_RESET : DEV_CMD_ACK;
 }
