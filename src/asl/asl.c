@@ -185,13 +185,12 @@ pcb_t* headBlocked(int *key){
     p: pcb da rimuovere
 */
 void outChildBlocked(pcb_t *p){
-    pcb_t *out = outBlocked(p);
-    if(out==NULL){
+    if(p==NULL){
         return;
     }
-
+    outBlocked(p);
     pcb_t *child;
-    list_for_each_entry(child,&(out->p_child),p_sib){
+    list_for_each_entry(child,&(p->p_child),p_sib){
         outChildBlocked(child);
     }
 }
