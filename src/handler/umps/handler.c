@@ -23,18 +23,9 @@
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
 #include <asl/asl.h>
-
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
 #include <utilities/semaphore.h>
-
-int get_interrupting_line( state_t *request );
-
-int get_interrupting_device( int line );
-
-void handle_irq_terminal(devreg_t *dev_reg);
-
-void handle_irq_other_dev(devreg_t *dev_reg);
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
@@ -102,6 +93,7 @@ void Handler_TLB(void) {
 //----------------------------------------------------------------
 void Handler_Interrupt(void) {
     state_t *request    = (state_t *) INT_OLDAREA;
+	word cause          = request->cause;
     word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
 
     if(exc_cause != EXC_INT){
@@ -109,7 +101,7 @@ void Handler_Interrupt(void) {
     }
 
     //----------------------------------------------Inter-processor
-    if(CAUSE_IP_GET(request->cause,IL_IPI)){
+    if(CAUSE_IP_GET(cause, IL_IPI)){
         PANIC(); /*NOT SUPPORTED*/
     }
     //-------------------------------------------------------------
@@ -117,10 +109,10 @@ void Handler_Interrupt(void) {
     scheduler_UpdateContext(request); /* update context */
     
     //--------------------------Processor Local Timer/Interval Timer
-    if(CAUSE_IP_GET(request->cause,IL_CPUTIMER)){
+    if(CAUSE_IP_GET(cause, IL_CPUTIMER)){
         scheduler_schedule(FALSE);
     }
-    if(CAUSE_IP_GET(request->cause,IL_TIMER)){
+    if(CAUSE_IP_GET(cause, IL_TIMER)){
         scheduler_schedule(TRUE);
     }
     //-------------------------------------------------------------
@@ -132,7 +124,7 @@ void Handler_Interrupt(void) {
     */
     int line;
     int dev;
-    if((line = get_interrupting_line(request))<0 || (dev = get_interrupting_device(line))<0){
+    if((line = get_interrupting_line(cause))<0 || (dev = get_interrupting_device(line))<0){
         PANIC(); /*something bad happens*/
     }
 
@@ -152,51 +144,3 @@ void Handler_Interrupt(void) {
     }
     scheduler_schedule(FALSE);
 }
-
-int get_interrupting_line(state_t *request){
-    //-------------------------------------------------Disk Devices
-    if (CAUSE_IP_GET(request->cause,IL_DISK)){
-        return IL_DISK;
-    }
-    //-------------------------------------------------Tape Devices
-    if (CAUSE_IP_GET(request->cause,IL_TAPE)){
-        return IL_TAPE;
-    }
-    //----------------------------------------------Network Devices
-    if (CAUSE_IP_GET(request->cause,IL_ETHERNET)){
-        return IL_ETHERNET;
-    }
-    //----------------------------------------------Printer Devices
-    if (CAUSE_IP_GET(request->cause,IL_PRINTER)){
-        return IL_PRINTER;
-    }
-    //---------------------------------------------Terminal Devices
-    if (CAUSE_IP_GET(request->cause,IL_TERMINAL)){
-        return IL_TERMINAL;
-    }
-    return -1; /*error*/
-}
-
-int get_interrupting_device(int line){
-    for(int i=0;i<N_DEV_PER_IL;i++){
-        if(IS_IRQ_RAISED_FROM_I(line,i)){
-            return i;
-        }
-    }
-    return -1; /*error*/
-}
-
-void handle_irq_terminal(devreg_t *dev_reg){
-    if(IS_TERM_READY(dev_reg->term.transm_status)){  
-        /* gestione del terminale di ricezione */
-        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-        return;
-    }
-    /* gestione del terminale di trasmissione */
-    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-}
-
-void handle_irq_other_dev(devreg_t *dev_reg){
-    dev_reg->dtp.command = IS_DEV_IN_ERROR( (dev_reg->dtp.status) ) ? DEV_CMD_RESET : DEV_CMD_ACK;
-}
-//------------------------------------------------------------------

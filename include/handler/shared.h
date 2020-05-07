@@ -94,4 +94,36 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
  * @return int 
  */
 int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
+
+/**
+ * @brief Restituisce il numero della interrupt line con priorità più alta e interrupt in attesa
+ * @param cause register
+ * @return int
+ * 		   -1 se il valore del registro non corrisponde a nessuna delle interrupt line
+ */
+int get_interrupting_line(word cause);
+
+/**
+ * @brief Restituisce il numero del device con interrupt in attesa e priorità più alta tra quelli appartenenti alla 
+ * 		  interrupt line indicata come parametro
+ * @param numero della interrupt line
+ * @return numero del device
+ * 		   -1 se nessun device della interrupt line ha generato un interrupt
+ */
+int get_interrupting_device(int line);
+
+/**
+ * @brief Gestione per i terminali di ricezione e trasmissione. Se è presente un codice di errore nello status del terminale 
+ * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
+ * @param puntatore al device register
+ */
+void handle_irq_terminal(devreg_t *dev_reg);
+
+/**
+ * @brief Gestione per tutti i device che non siano un terminale. Se è presente un codice di errore nello status del device 
+ * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
+ * @param puntatore al device register
+ */
+void handle_irq_other_dev(devreg_t *dev_reg);
+
 #endif
