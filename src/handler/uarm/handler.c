@@ -22,6 +22,9 @@
 #include <handler/handler.h>
 #include <handler/shared.h>
 #include <scheduler/scheduler.h>
+#include <asl/asl.h>
+#include <shared/device/device.h>
+#include <shared/device/terminal.h>
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
@@ -88,38 +91,45 @@ void Handler_TLB(void){
 //----------------------------------------------------------------
 void Handler_Interrupt(void) {	
 	state_t *request    = (state_t *) INT_OLDAREA;
-    word cause          = request->CP15_Cause;
-    word excode         = CAUSE_EXCCODE_GET(request->CP15_Cause);
-
+	word cause          = request->CP15_Cause;
+    word exc_cause         = CAUSE_EXCCODE_GET(request->CP15_Cause);
     request->pc -= WORD_SIZE;
-    scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato	
-    if (excode != EXC_INTERRUPT) {
-        PANIC();
-    }
-    int b_force_switch = FALSE;
-    if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
-        // Interval Timer
-        b_force_switch = TRUE;
-    }
-    else if ( CAUSE_IP_GET(cause, INT_DISK) ) {
-        // Disk Devices
-    }
-    else if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
-        // Tape Devices
-    }
-    else if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
-        // Unused
-    }
-    else if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
-        // Printer Devices
-    }
-    else if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
-        // Terminal Devices
-    }
-    else {
-        // unhandled interrupt
-        PANIC();
+    	
+    if (exc_cause != EXC_INTERRUPT) {
+        PANIC(); /*REQ ERROR*/
     }
 
-    scheduler_schedule( b_force_switch ); 
+	scheduler_UpdateContext(request); /* update context */
+	
+	//-----------------------------------------------Interval Timer
+    if ( CAUSE_IP_GET(cause, INT_TIMER) ) {
+        scheduler_schedule(TRUE);
+    }
+	//-------------------------------------------------------------
+    
+	int line;
+	int dev;	
+	if((line = get_interrupting_line(cause))<0 || (dev = get_interrupting_device(line))<0){
+        PANIC(); /*something bad happens*/
+    }
+
+    devreg_t *dev_reg       = (devreg_t *) DEV_REG_ADDR(line, dev);
+    unsigned int dev_status = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+
+	if(line==INT_TERMINAL){
+       handle_irq_terminal(dev_reg);
+  	}else{
+       handle_irq_other_dev(dev_reg);
+   	}
+
+    int *sem = device_GetSem( line, dev, GET_SEM_OFFSET(dev_reg, line) ); /*sem associated with device*/
+    if(++(*sem) <= 0){ /*V on this sem*/
+        pcb_t *p = removeBlocked(sem);
+        if(p!=NULL){
+            p->p_s.a1 = dev_status;
+            /*add process to ready queue*/
+            scheduler_AddProcess(p);
+        }
+	}
+    scheduler_schedule(FALSE); 
 }

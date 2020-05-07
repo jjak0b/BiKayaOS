@@ -25,6 +25,7 @@
 #include <pcb/pcb.h>
 #include <system/shared/device/device.h>
 #include <utilities/semaphore.h>
+#include <shared/device/terminal.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
@@ -178,4 +179,51 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
 int Sys8_GetPID( void **pid, void **ppid ) {
     // TODO
     return -1;
+}
+
+int get_interrupting_line(word cause){
+	//-------------------------------------------------Disk Devices
+	if ( CAUSE_IP_GET(cause, INT_DISK) ) {
+		return INT_DISK;
+    }
+	//-------------------------------------------------Tape Devices
+    if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
+		return INT_TAPE;
+    }
+	//-------------------------------------------------Unused Devices
+    if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
+		return INT_UNUSED;
+    }
+	//-------------------------------------------------Printer Devices
+    if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
+        return INT_PRINTER;
+    }
+	//-------------------------------------------------Terminal Devices
+    if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
+		return INT_TERMINAL;
+    }
+    return -1; /*error*/
+}
+
+int get_interrupting_device(int line){
+	 for(int i=0;i<N_DEV_PER_IL;i++){
+        if(IS_IRQ_RAISED_FROM_I(line,i)){
+            return i;
+        }
+    }
+    return -1; /*error*/
+}
+
+void handle_irq_terminal(devreg_t *dev_reg){
+    if(IS_TERM_READY(dev_reg->term.transm_status)){  
+        /* gestione del terminale di ricezione */
+        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+        return;
+    }
+    /* gestione del terminale di trasmissione */
+    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+}
+
+void handle_irq_other_dev(devreg_t *dev_reg){
+    dev_reg->dtp.command = IS_DEV_IN_ERROR( (dev_reg->dtp.status) ) ? DEV_CMD_RESET : DEV_CMD_ACK;
 }
