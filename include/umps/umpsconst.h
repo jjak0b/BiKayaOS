@@ -31,8 +31,3 @@
 #define INTERVAL_TIMER_OFF    (~INTERVAL_TIMER_ON)
 
 #define CAUSE_IP_GET(cause, line) ((cause&CAUSE_IP(line)) != 0)
-
-
-#define CDEV_BITMAP_DEV_ADDR(line,dev) (CDEV_BITMAP_ADDR(line) + (dev))
-#define CDEV_BITMAP_DEV(line,dev) *((unsigned int *)CDEV_BITMAP_DEV_ADDR(line,dev))
-#define IRQ_FROM(line,dev) (CDEV_BITMAP_DEV(line,dev) == 1U)

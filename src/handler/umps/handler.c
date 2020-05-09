@@ -87,6 +87,7 @@ void Handler_TLB(void) {
     }
     PANIC(); /*Questa eccezione è disabilitata!*/
 }
+<<<<<<< HEAD
 //----------------------------------------------------------------
 
 // Interrupt Handler
@@ -160,3 +161,6 @@ void handle_irq(unsigned int line, unsigned int dev){
         }
     } while( p != NULL && *sem < 0 );
 }
+=======
+//----------------------------------------------------------------
+>>>>>>> interrupt handler condiviso

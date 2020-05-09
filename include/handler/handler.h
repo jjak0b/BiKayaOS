@@ -31,7 +31,4 @@ void Handler_Trap(void);
 void Handler_TLB(void);
 //-------------------------------------------------------
 
-// Interrupt Handler functions and define
-//-------------------------------------------------------
-void Handler_Interrupt(void);
 #endif

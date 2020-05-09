@@ -215,37 +215,69 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
     return (-1);
 }
 
-int get_interrupting_line(word cause){
-	//-------------------------------------------------Disk Devices
-	if ( CAUSE_IP_GET(cause, INT_DISK) ) {
-		return INT_DISK;
-    }
-	//-------------------------------------------------Tape Devices
-    if ( CAUSE_IP_GET(cause, INT_TAPE) ) {
-		return INT_TAPE;
-    }
-	//-------------------------------------------------Unused Devices
-    if ( CAUSE_IP_GET(cause, INT_UNUSED) ) {
-		return INT_UNUSED;
-    }
-	//-------------------------------------------------Printer Devices
-    if( CAUSE_IP_GET(cause, INT_PRINTER) ) {
-        return INT_PRINTER;
-    }
-	//-------------------------------------------------Terminal Devices
-    if( CAUSE_IP_GET(cause, INT_TERMINAL) ) {
-		return INT_TERMINAL;
-    }
-    return -1; /*error*/
+// Interrupt Handler
+//----------------------------------------------------------------
+void Handler_Interrupt(void) {
+	state_t *request    = (state_t *) INT_OLDAREA;
+	word cause          = request->cause; /*CP15_Cause per uARM*/
+    word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
+
+	#ifdef TARGET_UARM
+	request->pc -= WORD_SIZE;
+	#endif
+	
+	if (exc_cause != EXC_INTERRUPT) {
+		PANIC(); /*REQ ERROR*/
+	}
+
+	//----------------Inter-processor irq/Processor Local Timer irq
+	if (CAUSE_IP_GET(cause, IL_IPI) || CAUSE_IP_GET(cause, IL_CPUTIMER)) {
+		PANIC(); /*NOT USED*/
+	}
+	//-------------------------------------------------------------
+
+	scheduler_UpdateContext(request); /* update context */
+	int irq_served = FALSE;
+	int force_switch = FALSE;
+	//-------------------------------------------Interval Timer irq
+	if (CAUSE_IP_GET(cause, IL_TIMER)) {
+		force_switch = irq_served = TRUE;
+	}
+	//-------------------------------------------------------------
+
+	/*With this comment, we mean that the underlying management code
+		* is related to interrupts raised on lines> = 3. For this reason,
+		* it  is  also  necessary  to  identify  the specific device that 
+		* generated the interrupt.
+		*/
+	unsigned int dev_line;
+	unsigned int dev;
+	for (dev_line = 0; dev_line < N_EXT_IL; dev_line++) {
+		for (dev = 0; dev_line < N_DEV_PER_IL; dev++) {
+			if (IRQ_FROM(dev_line, dev)) {
+				handle_irq(dev_line + 3, dev);
+				irq_served = TRUE;
+			}
+		}
+	}
+	if (!irq_served) {
+		PANIC(); /*irq but no interrupt served?*/
+	}
+
+	scheduler_schedule(force_switch);
 }
 
-int get_interrupting_device(int line){
-	 for(int i=0;i<N_DEV_PER_IL;i++){
-        if(IS_IRQ_RAISED_FROM_I(line,i)){
-            return i;
-        }
+void handle_irq(unsigned int line, unsigned int dev){
+    devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
+    word dev_status     = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+
+   (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
+    
+    int *sem = device_GetSem(line, dev, GET_SEM_OFFSET(dev_reg, line)); /*sem associated with device*/
+    pcb_t *p = semaphore_V(sem);
+    if(p != NULL){
+        p->p_s.reg_v0 = dev_status; /*registro a1 per uARM*/
     }
-    return -1; /*error*/
 }
 
 void handle_irq_terminal(devreg_t *dev_reg){
