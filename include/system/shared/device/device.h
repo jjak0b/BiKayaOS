@@ -26,6 +26,9 @@
 //
 #define IS_IRQ_RAISED_FROM_I(line,i) ((i>=0 && i<8 && CDEV_BITMAP_ADDR(line)&(1U<<i)) != 0)
 
+#define CDEV_BITMAP_DEV_ADDR(line,dev) (CDEV_BITMAP_ADDR(line) + (dev))
+#define CDEV_BITMAP_DEV(line,dev) *((unsigned int *)CDEV_BITMAP_DEV_ADDR(line,dev))
+#define IRQ_FROM(line,dev) (CDEV_BITMAP_DEV(line,dev) == 1U)
 /* We are 8 type of interrupt lines. But, only 5
 * lines are related to devices.
 */

@@ -9,6 +9,12 @@
 #define SYS_SPECPASSUP_TYPE_TLB 1
 #define SYS_SPECPASSUP_TYPE_PGMTRAP 2
 
+#ifdef TARGET_UARM
+#define reg_v0 a1
+#define cause CP15_Cause
+#define CAUSE_GET_EXCCODE(cause) CAUSE_EXCCODE_GET(cause)
+#endif
+
 void SpecPassup_init();
 
 /**
@@ -95,22 +101,9 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
  */
 int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
 
-/**
- * @brief Restituisce il numero della interrupt line con priorità più alta e interrupt in attesa
- * @param cause register
- * @return int
- * 		   -1 se il valore del registro non corrisponde a nessuna delle interrupt line
- */
-int get_interrupting_line(word cause);
-
-/**
- * @brief Restituisce il numero del device con interrupt in attesa e priorità più alta tra quelli appartenenti alla 
- * 		  interrupt line indicata come parametro
- * @param numero della interrupt line
- * @return numero del device
- * 		   -1 se nessun device della interrupt line ha generato un interrupt
- */
-int get_interrupting_device(int line);
+// Interrupt Handler functions and define
+//-------------------------------------------------------
+void Handler_Interrupt(void);
 
 /**
  * @brief Gestore per interrupt device. Richiama i metodi sottostanti in base
