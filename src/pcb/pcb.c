@@ -111,7 +111,7 @@ pcb_t *allocPcb(void){
         new->p_semkey = NULL;
         new->priority = 0;
         new->first_activation_tod = 0;
-        new->last_activation_tod = 0;
+        new->chrono_start_tod = 0;
         new->kmode_timelapse = 0;
         new->umode_timelapse = 0;
 #ifdef TARGET_UMPS

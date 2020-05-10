@@ -38,7 +38,8 @@ typedef struct pcb_t {
     int *p_semkey;
 
     /* activation TODs; running timelapses */
-    unsigned int first_activation_tod, last_activation_tod;
+    /* chrono start tod = tod of the last chronometer activation */
+    unsigned int first_activation_tod, chrono_start_tod;
     unsigned int kmode_timelapse, umode_timelapse;
 } pcb_t;
 

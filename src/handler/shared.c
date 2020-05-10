@@ -60,7 +60,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
     int b_hasReturnValue = FALSE;
     switch( sysNo ) {
         case GETCPUTIME:
-            Sys1_GetCPUTime( state, (word*)param1, (word*)param2, (word*)param3 );
+            Sys1_GetCPUTime( (unsigned int*)param1, (unsigned int*)param2, (unsigned int*)param3 );
             break;
         case CREATEPROCESS:
             b_hasReturnValue = TRUE;
@@ -68,7 +68,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case TERMINATEPROCESS:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys3_TerminateProcess( (void*) param1 );
+            *returnValue = (int) Sys3_TerminateProcess( (pcb_t*) param1 );
             break;
         case VERHOGEN:
             Sys4_Verhogen( (int*)param1 );
@@ -104,8 +104,21 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
     return b_hasReturnValue;
 }
 
-void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock ) {
-    // TODO
+int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wallclock ) {
+    /* prima viene effettuato il controllo validità puntatori */
+    if ( user && kernel && wallclock ) {
+        scheduler_UpdateProcessRunningTime();
+        pcb_t *p = scheduler_GetRunningProcess();
+        if (p == NULL)
+            return (-1);
+        *user = p->umode_timelapse;
+        *kernel = p->kmode_timelapse;
+        *wallclock = p->chrono_start_tod - p->first_activation_tod;
+        scheduler_StartProcessChronometer();
+        return 0;
+    }
+    else
+        return (-1);    
 }
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {

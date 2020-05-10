@@ -70,7 +70,7 @@ int scheduler_schedule( int b_force_switch ) {
 		// TODO: Re-impostare time slice rimanente oppure ignorare ?
 	}
 
-	scheduler_SetProcessActivationTOD();
+	scheduler_StartProcessChronometer();
 
 	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
@@ -81,7 +81,7 @@ void scheduler_UpdateContext( state_t* state ) {
 		moveState( state, &scheduler->running_p->p_s );
 
 	scheduler_UpdateProcessRunningTime();
-	scheduler_SetProcessActivationTOD();
+	scheduler_StartProcessChronometer();
 }
 
 int scheduler_StateToReady() {
@@ -235,18 +235,18 @@ int scheduler_RemoveProcess( pcb_t *p ) {
 	}
 }
 
-void scheduler_SetProcessActivationTOD() {
+void scheduler_StartProcessChronometer() {
 	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
 
 	/* il nome della costante è lo stesso per entrambe le architetture
 	quindi non serve controllare il target di compilazione (???)*/
 	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
 
-	p->last_activation_tod = *todlo; /* il processo inizia la sua esecuzione in kernel mode */
+	p->chrono_start_tod = *todlo; /* il processo inizia la sua esecuzione in kernel mode */
 
 	/* se il processo non era mai stato attivato, setta il TOD di prima attivazione */
 	if ( p->first_activation_tod == 0 )
-		p->first_activation_tod = p->last_activation_tod;
+		p->first_activation_tod = p->chrono_start_tod;
 }
 
 void scheduler_UpdateProcessRunningTime() {
@@ -265,7 +265,7 @@ void scheduler_UpdateProcessRunningTime() {
 	#endif
 
 	if ( kernelmode )
-		p->kmode_timelapse += *todlo - p->last_activation_tod;
+		p->kmode_timelapse += *todlo - p->chrono_start_tod;
 	else
-		p->umode_timelapse *= *todlo - p->last_activation_tod;
+		p->umode_timelapse *= *todlo - p->chrono_start_tod;
 }
