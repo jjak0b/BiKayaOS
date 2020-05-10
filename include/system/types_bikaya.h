@@ -36,6 +36,10 @@ typedef struct pcb_t {
 
     /* key of the semaphore on which the process is eventually blocked */
     int *p_semkey;
+
+    /* activation TODs; running timelapses */
+    unsigned int first_activation_tod, last_activation_tod;
+    unsigned int kmode_timelapse, umode_timelapse;
 } pcb_t;
 
 

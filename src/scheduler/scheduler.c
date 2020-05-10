@@ -70,6 +70,8 @@ int scheduler_schedule( int b_force_switch ) {
 		// TODO: Re-impostare time slice rimanente oppure ignorare ?
 	}
 
+	scheduler_SetProcessActivationTOD();
+
 	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
 }
@@ -77,6 +79,9 @@ int scheduler_schedule( int b_force_switch ) {
 void scheduler_UpdateContext( state_t* state ) {
 	if( scheduler->running_p != NULL )
 		moveState( state, &scheduler->running_p->p_s );
+
+	scheduler_UpdateProcessRunningTime();
+	scheduler_SetProcessActivationTOD();
 }
 
 int scheduler_StateToReady() {
@@ -84,10 +89,12 @@ int scheduler_StateToReady() {
 	if( scheduler->running_p != NULL ) {
 		scheduler->running_p->priority = scheduler->running_p->original_priority;
 		scheduler_AddProcess( scheduler->running_p );
+		scheduler_UpdateProcessRunningTime();
 		scheduler->running_p = NULL;
 		scheduler->b_force_switch = TRUE;
 		return 0;
 	}
+
 	scheduler->b_force_switch = TRUE;
 	return 1;
 	
@@ -101,6 +108,7 @@ int scheduler_StateToWaiting( int* semKey ) {
 
 	int b_result = insertBlocked( semKey, p );
 	if( !b_result ) {
+		scheduler_UpdateProcessRunningTime();
 		scheduler->running_p = NULL;
 		scheduler->b_force_switch = TRUE;
 		return 0;
@@ -225,4 +233,39 @@ int scheduler_RemoveProcess( pcb_t *p ) {
 	else { /* rimuove dalla coda */
 		return NULL != outProcQ( &(scheduler->ready_queue), p );
 	}
+}
+
+void scheduler_SetProcessActivationTOD() {
+	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+
+	/* il nome della costante è lo stesso per entrambe le architetture
+	quindi non serve controllare il target di compilazione (???)*/
+	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
+
+	p->last_activation_tod = *todlo; /* il processo inizia la sua esecuzione in kernel mode */
+
+	/* se il processo non era mai stato attivato, setta il TOD di prima attivazione */
+	if ( p->first_activation_tod == 0 )
+		p->first_activation_tod = p->last_activation_tod;
+}
+
+void scheduler_UpdateProcessRunningTime() {
+	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+
+	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
+
+	unsigned int kernelmode;
+
+	#ifdef TARGET_UARM
+	kernelmode = p->p_s.cpsr && ((unsigned int *) STATUS_SYS_MODE);
+	#endif
+
+	#ifdef TARGET_UMPS
+	kernelmode = p->p_s.status && ((unsigned int *) STATUS_KUp);
+	#endif
+
+	if ( kernelmode )
+		p->kmode_timelapse += *todlo - p->last_activation_tod;
+	else
+		p->umode_timelapse *= *todlo - p->last_activation_tod;
 }

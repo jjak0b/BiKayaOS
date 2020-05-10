@@ -154,4 +154,15 @@ int scheduler_RemoveProcess( pcb_t *p );
  */
 int scheduler_RemoveProgeny( pcb_t* p );
 
+/**
+ * @brief   Aggiorna il TOD dell'ultimo avvio del processo
+ *          Se è la prima volta che il processo viene avviato, aggiorna anche il TOD di primo avvio
+ */
+void scheduler_SetProcessActivationTOD();
+
+/**
+ * @brief   Aggiorna il tempo totale trascorso dal processo a lavorare in Kernel o User mode
+ */
+void scheduler_UpdateProcessRunningTime();
+
 #endif
