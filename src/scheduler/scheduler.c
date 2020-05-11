@@ -238,8 +238,6 @@ int scheduler_RemoveProcess( pcb_t *p ) {
 void scheduler_StartProcessChronometer() {
 	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
 
-	/* il nome della costante è lo stesso per entrambe le architetture
-	quindi non serve controllare il target di compilazione (???)*/
 	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
 
 	p->chrono_start_tod = *todlo; /* il processo inizia la sua esecuzione in kernel mode */
@@ -257,15 +255,15 @@ void scheduler_UpdateProcessRunningTime() {
 	unsigned int kernelmode;
 
 	#ifdef TARGET_UARM
-	kernelmode = p->p_s.cpsr && ((unsigned int *) STATUS_SYS_MODE);
+	kernelmode = (p->p_s.cpsr & STATUS_SYS_MODE) == STATUS_SYS_MODE;
 	#endif
 
 	#ifdef TARGET_UMPS
-	kernelmode = p->p_s.status && ((unsigned int *) STATUS_KUp);
+	kernelmode = (p->p_s.status & STATUS_KUp) == STATUS_KUp;
 	#endif
 
 	if ( kernelmode )
 		p->kmode_timelapse += *todlo - p->chrono_start_tod;
 	else
-		p->umode_timelapse *= *todlo - p->chrono_start_tod;
+		p->umode_timelapse += *todlo - p->chrono_start_tod;
 }
