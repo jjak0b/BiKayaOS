@@ -57,7 +57,15 @@ state_t *GetSpecPassup( int type );
  */
 word Syscaller( state_t* currState, word sysno, word param1, word param2, word param3, word *returnValueAddr );
 
-void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock );
+/**
+ * @brief Aggiorna il calcolo delle tempistiche e assegna i valori ricavati ai puntatori
+ * Alla fine fa ripartire il cronometro
+ * @param user 
+ * @param kernel 
+ * @param wallclock 
+ * @return int 
+ */
+int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wallclock );
 
 /**
  * @brief Implementazione della syscall CHILD_PRIORITY
