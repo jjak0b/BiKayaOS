@@ -98,16 +98,10 @@ int scheduler_StateToWaiting( int* semKey ) {
 	if( p == NULL ) {
 		return -1;
 	}
-
+	scheduler_StateToReady();
+	scheduler_RemoveProcess( p );
 	int b_result = insertBlocked( semKey, p );
-	if( !b_result ) {
-		scheduler->running_p = NULL;
-		scheduler->b_force_switch = TRUE;
-		return 0;
-	}
-	else {
-		return 1;
-	}
+	return b_result;
 }
 
 /**

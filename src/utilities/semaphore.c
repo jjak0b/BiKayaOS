@@ -9,8 +9,13 @@ int semaphore_P( int *semkey, pcb_t * p ) {
         return !b_error;
     
     if( --(*semkey) < 0 ) {
-        scheduler_RemoveProcess( p );
-        b_error = insertBlocked( semkey, p );
+        if( p == scheduler_GetRunningProcess() ){
+            b_error = scheduler_StateToWaiting( semkey );
+        }
+        else {
+            scheduler_RemoveProcess( p );
+            b_error = insertBlocked( semkey, p );
+        }
     }
     return b_error;
 }

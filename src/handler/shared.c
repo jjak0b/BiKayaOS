@@ -156,21 +156,23 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     int *semKey = device_GetSem( devLine, devNo, subdevice );
     pcb_t *pid = scheduler_GetRunningProcess();
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
+    if( *semKey >= 0 ){
+        if( devLine == IL_TERMINAL ) {
+            if( subdevice ) {
+                devreg->term.transm_command = command;
+            }
+            else {
+                devreg->term.recv_command = command;
+            }
+        }
+        else {
+            devreg->dtp.command = command;
+        }
+    }
+
     int b_error = semaphore_P( semKey, pid );
     if( b_error ) {
         scheduler_StateToTerminate( pid, FALSE );
-    }
-    
-    if( devLine == IL_TERMINAL ) {
-        if( subdevice ) {
-            devreg->term.transm_command = command;
-        }
-        else {
-            devreg->term.recv_command = command;
-        }
-    }
-    else {
-        devreg->dtp.command = command;
     }
 }
 
