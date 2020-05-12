@@ -1,6 +1,10 @@
 #ifndef H_HANDLER
 #define H_HANDLER
 
+// Interrupt Handler functions and define
+//-------------------------------------------------------
+void Handler_Interrupt(void);
+
 /**
  * @brief Gestore SYSCALL/BP. Richiama il gestore 
  * specifico per SYSCALL/BP se il registro di causa

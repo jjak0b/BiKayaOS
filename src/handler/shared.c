@@ -26,6 +26,7 @@
 #include <system/shared/device/device.h>
 #include <utilities/semaphore.h>
 #include <shared/device/terminal.h>
+#include <system/shared/registers.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
@@ -217,15 +218,11 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt(void){
-	state_t *request    = (state_t *) INT_OLDAREA;
-	word cause          = request->cause; /*CP15_Cause per uARM*/
-    word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
+void Handle_Interrupt() {
+    state_t *request    = (state_t *) INT_OLDAREA;
+	word cause          = request->reg_cause;
+    word exc_cause      = CAUSE_EXCCODE_GET( cause );
 
-	#ifdef TARGET_UARM
-	request->pc -= WORD_SIZE;
-	#endif
-	
 	if(exc_cause != EXC_INTERRUPT){
 		PANIC(); /*REQ ERROR*/
 	}
@@ -281,20 +278,14 @@ void handle_irq(unsigned int line, unsigned int dev){
     if((p = semaphore_V(sem))==NULL){
         return;
     }
-    p->p_s.reg_v0 = dev_status; /*registro a1 per uARM*/
+    p->p_s.reg_return_0 = dev_status;
     
     /*see next process in queue*/
     if((p=headBlocked(sem))==NULL){
         return;
     }
 
-    word command;
-    #ifdef TARGET_UMPS
-        command = p->p_s.reg_a1;
-    #endif
-    #ifdef TARGET_UARM
-        command = p->p_s.a2;
-    #endif
+    word command = p->p_s.reg_param_1;
 
     switch(line){
         case IL_TERMINAL:
@@ -317,4 +308,27 @@ void handle_irq_terminal(devreg_t *dev_reg){
 
 void handle_irq_other_dev(devreg_t *dev_reg){
     dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_reg->dtp.status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+}
+
+void Handle_Trap(void){
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
+    if( area != NULL ) {
+        LDST( area );
+    }
+    PANIC();
+}
+
+void Handle_TLB(void){
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
+    if( area != NULL ) {
+        LDST( area );
+    }
+    PANIC();
+}
+
+void Handle_breakpoint() {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+    if( area != NULL ) {
+        LDST( area );
+    }
 }

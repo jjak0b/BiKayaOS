@@ -26,6 +26,7 @@
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
 #include <utilities/semaphore.h>
+#include <system/shared/registers.h>
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
@@ -33,14 +34,14 @@ void Handler_SysCall(void){
     state_t *request    = (state_t *) SYSBK_OLDAREA;            /*Caller CPU state*/
     word cause          = CAUSE_GET_EXCCODE(request->cause);    /*Content of cause register*/
     
-    request->pc_epc += WORD_SIZE; //jump to next instruction
+    request->reg_pc += WORD_SIZE; //jump to next instruction
     scheduler_UpdateContext( request ); // aggiorno il contesto del processo tracciato    
     switch(cause){
         case EXC_SYS:
             handle_syscall(request);
             break;
         case EXC_BP:
-            handle_breakpoint(request);
+            Handle_breakpoint();
             break;
         default: 
             PANIC();
@@ -56,34 +57,23 @@ void handle_syscall(state_t *request){
         PANIC();
     }
 
-    Syscaller( request, request->reg_a0, request->reg_a1, request->reg_a2, request->reg_a3, &request->reg_v0 );
+    Syscaller( request, request->reg_param_0, request->reg_param_1, request->reg_param_2, request->reg_param_3, &request->reg_return_0 );
 }
 
-void handle_breakpoint(state_t *request) {
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
-    if( area != NULL ) {
-        LDST( area );
-    }
-}
 //----------------------------------------------------------------
 
+void Handler_Interrupt(void) {
+    Handle_Interrupt();
+}
 // Trap Handler
 //----------------------------------------------------------------
 void Handler_Trap(void) {
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
-    if( area != NULL ) {
-        LDST( area );
-    }
-    PANIC(); /*Questa eccezione è disabilitata!*/ 
+    Handle_Trap();
 }
 //----------------------------------------------------------------
 
 // TLB Handler
 //----------------------------------------------------------------
 void Handler_TLB(void) {
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
-    if( area != NULL ) {
-        LDST( area );
-    }
-    PANIC(); /*Questa eccezione è disabilitata!*/
+    Handle_TLB();
 }

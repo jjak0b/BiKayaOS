@@ -9,11 +9,6 @@
 #define SYS_SPECPASSUP_TYPE_TLB 1
 #define SYS_SPECPASSUP_TYPE_PGMTRAP 2
 
-#ifdef TARGET_UARM
-#define reg_v0 a1
-#define cause CP15_Cause
-#define CAUSE_GET_EXCCODE(cause) CAUSE_EXCCODE_GET(cause)
-#endif
 
 void SpecPassup_init();
 
@@ -111,7 +106,13 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
 
 // Interrupt Handler functions and define
 //-------------------------------------------------------
-void Handler_Interrupt(void);
+void Handle_Interrupt( void );
+
+void Handle_Trap( void );
+
+void Handle_TLB( void );
+
+void Handle_breakpoint( void );
 
 /**
  * @brief Gestore per interrupt device. Richiama i metodi sottostanti in base

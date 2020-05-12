@@ -25,12 +25,13 @@
 #include <asl/asl.h>
 #include <shared/device/device.h>
 #include <shared/device/terminal.h>
+#include <system/shared/registers.h>
 
 // Syscall-Breakpoint Handler
 //---------------------------------------------------------------
 void Handler_SysCall(void) {
     state_t *request    = (state_t *) SYSBK_OLDAREA;                /*Caller CPU state*/
-    word cause          = CAUSE_EXCCODE_GET(request->CP15_Cause);   /*Content of cause register*/
+    word cause          = CAUSE_EXCCODE_GET(request->reg_cause);   /*Content of cause register*/
 
     scheduler_UpdateContext( request ); // aggiorna il contesto del processo tracciato
     switch(cause){
@@ -38,7 +39,7 @@ void Handler_SysCall(void) {
             handle_syscall(request);
             break;
         case EXC_BREAKPOINT:
-            handle_breakpoint(request);
+            Handle_breakpoint();
             break;
         default: 
             PANIC();
@@ -54,35 +55,27 @@ void handle_syscall(state_t *request){
         PANIC(); // in futuro sarà da gestire come eccezione (trap) 
     }
 
-    Syscaller( request, request->a1, request->a2, request->a3, request->a4, &request->v1 );
+    Syscaller( request, request->reg_param_0, request->reg_param_1, request->reg_param_2, request->reg_param_3, &request->reg_return_0 );
 }
 
-void handle_breakpoint( state_t *request ) {
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
-    if( area != NULL ) {
-        LDST( area );
-    }
-}
 //----------------------------------------------------------------
+
+void Handler_Interrupt(void) {
+    state_t *request    = (state_t *) INT_OLDAREA;
+	request->reg_pc -= WORD_SIZE;
+
+    Handle_Interrupt();
+}
 
 // Trap Handler
 //----------------------------------------------------------------
-void Handler_Trap(void){
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
-    if( area != NULL ) {
-        LDST( area );
-    }
-    PANIC();
+void Handler_Trap(void) {
+    Handle_Trap();
 }
 //----------------------------------------------------------------
 
 // TLB Handler
 //----------------------------------------------------------------
-void Handler_TLB(void){
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
-    if( area != NULL ) {
-        LDST( area );
-    }
-    PANIC();
+void Handler_TLB(void) {
+    Handle_TLB();
 }
-//----------------------------------------------------------------

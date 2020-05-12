@@ -21,7 +21,6 @@
 #include <system/umps/sysinit.h>
 #include <system/shared/shared.h>
 #include <handler/handler.h>
-#include <handler/shared.h>
 
 
 void initAreas(void){
