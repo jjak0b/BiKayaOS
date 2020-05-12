@@ -53,7 +53,7 @@ int scheduler_schedule( int b_force_switch ) {
 
 	int b_should_switch = b_force_switch || scheduler->b_force_switch || scheduler->running_p == NULL;
 
-	if( b_should_switch && emptyProcQ( &scheduler->ready_queue ) ) { 
+	if( scheduler->running_p == NULL && emptyProcQ( &scheduler->ready_queue ) ) { 
 		HALT();
 	}
 	
