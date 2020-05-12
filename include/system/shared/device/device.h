@@ -42,7 +42,6 @@
 //
 #define GET_DEV_STATUS(dev_reg, line) (line!=IL_TERMINAL ?(dev_reg->dtp.status):(GET_SEM_OFFSET(dev_reg,line) ?(dev_reg->term.recv_status):(dev_reg->term.transm_status)) ) 
 
-
 void device_init();
 
 /**

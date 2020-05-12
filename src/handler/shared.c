@@ -233,7 +233,7 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt(void) {
+void Handler_Interrupt(void){
 	state_t *request    = (state_t *) INT_OLDAREA;
 	word cause          = request->cause; /*CP15_Cause per uARM*/
     word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
@@ -242,41 +242,42 @@ void Handler_Interrupt(void) {
 	request->pc -= WORD_SIZE;
 	#endif
 	
-	if (exc_cause != EXC_INTERRUPT) {
+	if(exc_cause != EXC_INTERRUPT){
 		PANIC(); /*REQ ERROR*/
 	}
 
 	//----------------Inter-processor irq/Processor Local Timer irq
-	if (CAUSE_IP_GET(cause, IL_IPI) || CAUSE_IP_GET(cause, IL_CPUTIMER)) {
+	if(CAUSE_IP_GET(cause, IL_IPI) || CAUSE_IP_GET(cause, IL_CPUTIMER)){
 		PANIC(); /*NOT USED*/
 	}
 	//-------------------------------------------------------------
 
 	scheduler_UpdateContext(request); /* update context */
-	int irq_served = FALSE;
-	int force_switch = FALSE;
+	int irq_served      = FALSE;
+	int force_switch    = FALSE;
 	//-------------------------------------------Interval Timer irq
-	if (CAUSE_IP_GET(cause, IL_TIMER)) {
+	if(CAUSE_IP_GET(cause, IL_TIMER)){
 		force_switch = irq_served = TRUE;
 	}
 	//-------------------------------------------------------------
 
 	/*With this comment, we mean that the underlying management code
-		* is related to interrupts raised on lines> = 3. For this reason,
-		* it  is  also  necessary  to  identify  the specific device that 
-		* generated the interrupt.
-		*/
+    * is related to interrupts raised on lines> = 3. For this reason,
+    * it  is  also  necessary  to  identify  the specific device that 
+    * generated the interrupt.
+    */
 	unsigned int dev_line;
 	unsigned int dev;
-	for (dev_line = 0; dev_line < N_EXT_IL; dev_line++) {
-		for (dev = 0; dev_line < N_DEV_PER_IL; dev++) {
-			if (IRQ_FROM(dev_line, dev)) {
-				handle_irq(dev_line + 3, dev);
+	for(dev_line=0; dev_line<N_EXT_IL; dev_line++){
+		for(dev=0; dev_line<N_DEV_PER_IL; dev++){
+			if(IRQ_FROM(dev_line, dev)){
+				handle_irq(dev_line+3, dev);
 				irq_served = TRUE;
 			}
 		}
 	}
-	if (!irq_served) {
+
+	if(!irq_served){
 		PANIC(); /*irq but no interrupt served?*/
 	}
 
@@ -285,14 +286,38 @@ void Handler_Interrupt(void) {
 
 void handle_irq(unsigned int line, unsigned int dev){
     devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
+    
     word dev_status     = GET_DEV_STATUS(dev_reg,line); /*status of device*/
-
    (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
     
-    int *sem = device_GetSem(line, dev, GET_SEM_OFFSET(dev_reg, line)); /*sem associated with device*/
-    pcb_t *p = semaphore_V(sem);
-    if(p != NULL){
-        p->p_s.reg_v0 = dev_status; /*registro a1 per uARM*/
+    int subdev_trasm    = GET_SEM_OFFSET(dev_reg, line); /*1 if dev is trasm terminal, 0 otherwise*/
+    int *sem            = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+    pcb_t *p;
+
+    if((p = semaphore_V(sem))==NULL){
+        return;
+    }
+    p->p_s.reg_v0 = dev_status; /*registro a1 per uARM*/
+    
+    /*see next process in queue*/
+    if((p=headBlocked(sem))==NULL){
+        return;
+    }
+
+    word command;
+    #ifdef TARGET_UMPS
+        command = p->p_s.reg_a1;
+    #endif
+    #ifdef TARGET_UARM
+        command = p->p_s.a2;
+    #endif
+
+    switch(line){
+        case IL_TERMINAL:
+            (subdev_trasm) ? (dev_reg->term.transm_command = command) : (dev_reg->term.recv_command = command);
+            break;
+        default:
+            dev_reg->dtp.command = command;
     }
 }
 
