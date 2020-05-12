@@ -24,11 +24,8 @@
 #include <system/const_bikaya.h>
 
 void test_init(void){
-    state_t *state;     /*Pointer to a processor state area*/
-    pcb_t *test;
-    /*Alloc PCB and initialize process*/
-    test = allocPcb();
-    state = &(test->p_s);
+    pcb_t *test_pcb     = allocPcb();
+    state_t *state  = &(test_pcb->p_s);
     
     //--------------Initialize status register
     SetStatus(state, STATUS_NULL);
@@ -39,13 +36,13 @@ void test_init(void){
 
     //---------------------Set SP and priority 
     SetSP(state, (memaddr)RAM_TOP-FRAMESIZE);
-    test->original_priority = DEFAULT_PRIORITY;
-    test->priority          = test->original_priority;
+    test_pcb->original_priority = DEFAULT_PRIORITY;
+    test_pcb->priority          = test_pcb->original_priority;
     //---------------------------------------
 
     //--------------------------------------Set PC 
-    SetPC(&(test->p_s), (memaddr)test);
+    SetPC(state, (memaddr)test);
     //--------------------------------------------
 
-    scheduler_AddProcess(test); /*Add process to ready queue*/
+    scheduler_AddProcess(test_pcb); /*Add process to ready queue*/
 }
