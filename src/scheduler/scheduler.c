@@ -50,11 +50,12 @@ void scheduler_DoAging() {
 }
 
 int scheduler_schedule( int b_force_switch ) {
-	if( emptyProcQ( &scheduler->ready_queue ) ) { 
-		HALT();
-	}
 
 	int b_should_switch = b_force_switch || scheduler->b_force_switch || scheduler->running_p == NULL;
+
+	if( b_should_switch && emptyProcQ( &scheduler->ready_queue ) ) { 
+		HALT();
+	}
 	
 	if( b_should_switch ) {
 		scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
@@ -63,14 +64,17 @@ int scheduler_schedule( int b_force_switch ) {
 			scheduler_StateToReady(); /* rimette nella ready, ripristiando priorità */
 		}
 		scheduler->running_p = removeProcQ( &scheduler->ready_queue );
+		scheduler_UpdateProcessRunningTime();
+		scheduler_StartProcessChronometer();
 		/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
 		SET_INTERVAL_TIMER( TIME_SLICE );
 	}
 	else {
+		scheduler_UpdateProcessRunningTime();
+		scheduler_StartProcessChronometer();
 		// TODO: Re-impostare time slice rimanente oppure ignorare ?
 	}
 
-	scheduler_StartProcessChronometer();
 
 	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
@@ -242,6 +246,8 @@ void scheduler_StartProcessChronometer() {
 
 void scheduler_UpdateProcessRunningTime() {
 	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+
+	if( p == NULL ) return;
 
 	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
 
