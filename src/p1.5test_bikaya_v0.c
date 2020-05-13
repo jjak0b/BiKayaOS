@@ -81,6 +81,11 @@ void termprint(char *str) {
 #define termprint(str) tprint(str);
 #endif
 
+
+// extern void print( char *msg );
+// #undef termprint
+// #define termprint(str) print(str);
+
 char *toprint[] = {
     "1                        \n",  "2          _nnnn_        \n",  "3         dGGGGMMb       \n",
     "4        @p~qp~~qMb      \n",  "5        M|@||@) M|      \n",  "6        @,----.JM|      \n",

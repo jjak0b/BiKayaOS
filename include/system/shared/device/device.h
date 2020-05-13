@@ -37,8 +37,14 @@
 //
 #define GET_SEM_OFFSET(dev_reg,line) (line!=IL_TERMINAL ? (0) : (IS_TERM_READY(dev_reg->term.transm_status)? (0) : (1)))
 //
-#define GET_SEM_INDEX(dev_reg,line,device) (N_DEV_PER_IL*(line-N_EXT_IL+GET_SEM_OFFSET(dev_reg,line))+device)
-#define GET_SEM_INDEX_SUBDEV(line,device,subdevice) (N_DEV_PER_IL*(line-N_EXT_IL+ ( line!=IL_TERMINAL ? 0 : subdevice ) )+device)
+#define GET_SEM_INDEX(dev_reg,line,device) (N_DEV_PER_IL*(line-DEV_IL_START+GET_SEM_OFFSET(dev_reg,line))+device)
+/*
+   matrice vettorizzata in righe x colonne 
+   riga i: semafori della stessa (i-DEV_IL_START)-esima interrupt line
+   (riga i+s: semafori della stessa interrupt line ma contenente i s-esimi dei subdevice )
+   colonna j: semaforo dell j-esimo device di un interrupt line
+*/
+#define GET_SEM_INDEX_SUBDEV(line,device,subdevice) (N_DEV_PER_IL*(line - DEV_IL_START + ( line!=IL_TERMINAL ? 0 : subdevice ) )+device)
 //
 #define GET_DEV_STATUS(dev_reg, line) (line!=IL_TERMINAL ?(dev_reg->dtp.status):(GET_SEM_OFFSET(dev_reg,line) ?(dev_reg->term.recv_status):(dev_reg->term.transm_status)) ) 
 
@@ -62,6 +68,17 @@ void device_GetInfo( devreg_t *devreg, int *devline, int *devNo );
  * @return int* 
  */
 int *device_GetSem( int devline, int devNo, int subDev );
+
+/**
+ * @brief indica se ci sono processi in attesa su qualche coda di un semaforo associata ad un device
+ * 
+ * @PostCondition se sem == NULL saranno controllati tutti i semafori dei device, invece che solo su sem
+ * @param sem 
+ * @return int 
+ *          - TRUE se c'è almeno un processo in attesa
+ *          - FALSE altrimenti
+ */
+int device_IsAnyProcessWaiting( int *sem );
 
 #endif
 

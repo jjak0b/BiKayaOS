@@ -25,8 +25,8 @@
 
 void test_1_5();
 void test_init(void){
-    test_1_5();
-    return;
+    // test_1_5();
+    // return;
     pcb_t *test_pcb     = allocPcb();
     state_t *state  = &(test_pcb->p_s);
     

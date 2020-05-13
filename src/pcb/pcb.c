@@ -100,8 +100,17 @@ void insertProcQ(struct list_head *head, pcb_t *p){
     l’elemento rimosso.
 */
 pcb_t *allocPcb(void){
-    pcb_t *new;
-    new = removeProcQ(pcbFree_h);
+    pcb_t *new = removeProcQ(pcbFree_h);
+    pcb_init( new );
+    return new;
+}
+
+/*
+    inizializza
+    tutti i campi (NULL/0)
+    e le liste come liste vuote
+*/
+void pcb_init( pcb_t *new ){
     if(new != NULL){
         //inizializzazione pcb    
         INIT_LIST_HEAD(&(new->p_child));
@@ -151,7 +160,6 @@ pcb_t *allocPcb(void){
         new->p_s.TOD_Low = 0;
 #endif
     }
-    return new;
 }
 
 /* PCB QUEUE HANDLING */

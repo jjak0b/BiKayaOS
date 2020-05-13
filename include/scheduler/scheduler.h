@@ -33,6 +33,10 @@ struct scheduler_t {
     /* booleano indicante se il processo attuale non può continuare lo scheduling (TRUE) oppure continuare mantenere il processo schedulato (FALSE) */
     int b_force_switch;
 
+    /* Pcb utilizzato per mettere la macchina in stato di idle */
+    pcb_t idlePcb;
+    int b_has_idle;
+
 };
 typedef struct scheduler_t scheduler_t;
 
@@ -92,15 +96,17 @@ int scheduler_StateToReady();
 /**
  * @brief aggiunge il processo corrente alla ASL con associato la chiave fornita
  * 
- * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale
- * @PostCondition Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
+ * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale.
+ *               Inoltre il processo deve essere nella ready queue oppure o deve essere il processo in esecuzione
+ * @PostCondition se p == NULL sarà preso in considerazione il processo corrente. Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
  * @param semKey chiave da associare al semaforo
+ * @param p processo da sospendere sulla coda del semaforo
  * @return int 
  * 			* -1 se nessun processo è attualmente assegnato come processo corrente
  * 			* 0 se l'operazione è stata effettuata correttamente
  * 			* 1 se non è stato possibile aggiungere il processo corrente alla ASL (impossibile allocare semaforo)
  */
-int scheduler_StateToWaiting( int* semKey );
+int scheduler_StateToWaiting( pcb_t* p, int* semKey );
 
 /**
  * @brief Dealloca il descrittore del processo associato al pid fornito, rimuovendo eventualmente la sua progenie

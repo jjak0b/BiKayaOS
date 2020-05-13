@@ -24,13 +24,38 @@
 #include <pcb/utils.h>
 #include <system/const.h>
 #include <asl/asl.h>
+#include <system/shared/device/device.h>
+#include <system/shared/registers.h>
 
 HIDDEN scheduler_t *scheduler;
+
+/**
+ * @brief Rimuove il processo come processo corrente, altrimenti dalla wait queue, altrimenti ancora se non è presente lo rimuove dalla ready queue
+ * @PostCondition Se viene rimosso dalla wait queue di un semaforo, incrementa il valore del semaforo stesso, quindi il suo p_semkey diventa NULL
+ * 
+ * @param p il processo da rimuovere
+ */
+void scheduler_RemoveProcessFromAnyQ( pcb_t *p );
+
+void idle_entry(){ while( TRUE ) WAIT(); }
 
 void scheduler_init() {
 	HIDDEN scheduler_t scheduler_struct; /* Tutte le funzioni di questo Header fanno riferimento implicito a questa struttura */
 	mkEmptyProcQ( &scheduler_struct.ready_queue );
 	scheduler_struct.running_p = NULL;
+
+	scheduler_struct.b_has_idle = FALSE;
+	pcb_t *idlePcb = &scheduler_struct.idlePcb;
+	pcb_init( idlePcb );
+	idlePcb->original_priority = DEFAULT_PRIORITY;
+	idlePcb->priority = idlePcb->original_priority;
+	SetStatus( &idlePcb->p_s, STATUS_NULL);
+	EnableInterrupts( &idlePcb->p_s, TRUE);
+	EnableKernelMode( &idlePcb->p_s, TRUE);
+	EnableVirtualMemory( &idlePcb->p_s, FALSE);
+	SetPC( &idlePcb->p_s, (memaddr)idle_entry );
+	SetSP( &idlePcb->p_s, RAM_TOP );
+	
 	scheduler = &scheduler_struct;
 }
 
@@ -51,12 +76,33 @@ void scheduler_DoAging() {
 
 int scheduler_schedule( int b_force_switch ) {
 
+	if( scheduler->b_has_idle ) {
+		scheduler_RemoveProcessFromAnyQ( &scheduler->idlePcb );
+		scheduler->b_has_idle = FALSE;
+	}
 	int b_should_switch = b_force_switch || scheduler->b_force_switch || scheduler->running_p == NULL;
+	
+	scheduler->b_force_switch = FALSE; /* resetto */
 
 	if( scheduler->running_p == NULL && emptyProcQ( &scheduler->ready_queue ) ) { 
-		HALT();
+		/* tutti i processi potrebbero essere in attesa su una coda di qualche semaforo */
+
+		/* se non ci sono processi in attesa su qualche semaforo dei device,
+		   allora o tutti i processi sono terminati oppure può essere deadlock */
+		if( !device_IsAnyProcessWaiting( NULL ) ) {
+			HALT();
+		}
+		/* altrimenti metto nella ready queue un processo che fa solo WAIT, mettendo il sitema in stato di idle  */
+		else {
+			scheduler->b_force_switch = TRUE; /* preparo già per il prossimo scheduling, così in caso si sia riempita la ready queue, procede con cambiare processo */
+			b_should_switch = TRUE;
+			
+			scheduler_AddProcess( &scheduler->idlePcb );
+			scheduler->b_has_idle = TRUE;
+			scheduler_StartProcessChronometer(); // giusto per non ottenere valori strani nelle tempistiche
+		}
 	}
-	
+
 	if( b_should_switch ) {
 		scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
 
@@ -75,17 +121,17 @@ int scheduler_schedule( int b_force_switch ) {
 		// TODO: Re-impostare time slice rimanente oppure ignorare ?
 	}
 
-
 	LDST( &scheduler->running_p->p_s ); /* mette in esecuzione il processo */
 	return -1;
 }
 
 void scheduler_UpdateContext( state_t* state ) {
-	if( scheduler->running_p != NULL )
+	if( scheduler->running_p != NULL ){
 		moveState( state, &scheduler->running_p->p_s );
 
-	scheduler_UpdateProcessRunningTime();
-	scheduler_StartProcessChronometer();
+		scheduler_UpdateProcessRunningTime();
+		scheduler_StartProcessChronometer();
+	}
 }
 
 int scheduler_StateToReady() {
@@ -104,23 +150,18 @@ int scheduler_StateToReady() {
 	
 }
 
-int scheduler_StateToWaiting( int* semKey ) {
-	pcb_t* p = scheduler->running_p;
-	if( p == NULL ) {
-		return -1;
-	}
-	scheduler_StateToReady();
+int scheduler_StateToWaiting( pcb_t *p, int* semKey ) {
+	if( p == NULL )
+		p = scheduler->running_p;
+	if( p == NULL ) return -1;
+
+	if( p == scheduler->running_p )
+		scheduler_StateToReady();
 	scheduler_RemoveProcess( p );
 	int b_result = insertBlocked( semKey, p );
 	return b_result;
 }
 
-/**
- * @brief Rimuove il processo come processo corrente, altrimenti dalla wait queue, altrimenti ancora se non è presente lo rimuove dalla ready queue
- * @PostCondition Se viene rimosso dalla wait queue di un semaforo, incrementa il valore del semaforo stesso, quindi il suo p_semkey diventa NULL
- * 
- * @param p il processo da rimuovere
- */
 void scheduler_RemoveProcessFromAnyQ( pcb_t *p ) {
 	pcb_t *removed = NULL;
 
@@ -147,7 +188,7 @@ int scheduler_StateToTerminate( pcb_t *pid, int b_flag_terminate_progeny ) {
 	if( pid == NULL ) {
 		pid = scheduler->running_p;
 	}
-
+	
 	if( pid == NULL ) {
 		return 1;
 	}
@@ -160,7 +201,8 @@ int scheduler_StateToTerminate( pcb_t *pid, int b_flag_terminate_progeny ) {
 	else {
 		scheduler_RemoveProcessFromAnyQ( pid );
 		pcb_SetChildrenParent( pid, NULL );
-		freePcb( pid );
+		if( pid != &scheduler->idlePcb )
+			freePcb( pid );
 	}
 
 	return 0;
@@ -234,6 +276,8 @@ int scheduler_RemoveProcess( pcb_t *p ) {
 
 void scheduler_StartProcessChronometer() {
 	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+
+	if( p == NULL ) return;
 
 	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
 

@@ -1,5 +1,6 @@
 #include <system/system.h>
 #include <system/shared/device/device.h>
+#include <asl/asl.h>
 
 HIDDEN int _semdev[SEM_DEV_N];
 
@@ -32,4 +33,17 @@ void device_GetInfo( devreg_t *devreg, int *_line, int *_devNo ) {
 
 int *device_GetSem( int devline, int devNo, int subDev ) {
     return &_semdev[ GET_SEM_INDEX_SUBDEV(devline, devNo, subDev) ];
+}
+
+int device_IsAnyProcessWaiting( int *sem ) {
+    if( sem != NULL ) {
+        return headBlocked( sem ) != NULL;
+    }
+
+    int i = 0;
+    while( i < SEM_DEV_N && _semdev[ i ] >= 0 )
+        i++;
+    /* se è arrivato in fondo, avrà indice uguale al numero dei semafori */
+
+    return i != SEM_DEV_N;
 }

@@ -172,7 +172,7 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
     if( *semKey >= 0 ){
         if( devLine == IL_TERMINAL ) {
-            if( subdevice ) {
+            if( !subdevice ) {
                 devreg->term.transm_command = command;
             }
             else {

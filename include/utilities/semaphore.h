@@ -7,12 +7,12 @@
  * @brief Decrementa il valore del semaforo, se diventa < 0, allora il processo indicato viene sospeso;
  *        cioè rimosso dalla ready queue dello scheduler e posto in attesa sulla coda del semaforo specificato
  * @PreCondition semkey != NULL 
- * 
+ * @PostCondition se p == NULL, sarà preso in considerazione il processo corrente
  * @param semkey 
  * @param p 
  * @return int 
- *          FALSE se è stato sospeso correttamente
- *          TRUE se p == NULL oppure se non è stato possibile allocare un semd per il processo specificato
+ *         * 0 se è stato sospeso correttamente
+ *         * !=0 se p == NULL e non c'è alcun processo in esecuzione, oppure se non è stato possibile allocare un semd per il processo specificato
  */
 int semaphore_P( int *semkey, pcb_t * p );
 

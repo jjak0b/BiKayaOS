@@ -4,18 +4,9 @@
 #include <pcb/pcb.h>
 
 int semaphore_P( int *semkey, pcb_t * p ) {
-    int b_error = FALSE;
-    if( p == NULL )
-        return !b_error;
-    
+    int b_error = 0;
     if( --(*semkey) < 0 ) {
-        if( p == scheduler_GetRunningProcess() ){
-            b_error = scheduler_StateToWaiting( semkey );
-        }
-        else {
-            scheduler_RemoveProcess( p );
-            b_error = insertBlocked( semkey, p );
-        }
+        b_error = scheduler_StateToWaiting( p, semkey );
     }
     return b_error;
 }
