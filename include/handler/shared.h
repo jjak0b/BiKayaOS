@@ -125,13 +125,13 @@ void handle_irq(unsigned int line, unsigned int dev);
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
  * @param puntatore al device register
  */
-void handle_irq_terminal(devreg_t *dev_reg);
+int handle_irq_terminal(devreg_t *dev_reg);
 
 /**
  * @brief Gestione per tutti i device che non siano un terminale. Se è presente un codice di errore nello status del device 
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
  * @param puntatore al device register
  */
-void handle_irq_other_dev(devreg_t *dev_reg);
+int handle_irq_other_dev(devreg_t *dev_reg);
 
 #endif

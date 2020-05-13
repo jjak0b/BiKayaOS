@@ -250,8 +250,8 @@ void Handle_Interrupt() {
 	unsigned int dev_line;
 	unsigned int dev;
 	for(dev_line=0; dev_line<N_EXT_IL; dev_line++){
-		for(dev=0; dev_line<N_DEV_PER_IL; dev++){
-			if(IRQ_FROM(dev_line, dev)){
+        for(dev=0; dev<N_DEV_PER_IL; dev++){
+            if(IS_IRQ_RAISED_FROM_I(dev_line, dev)){
 				handle_irq(dev_line+3, dev);
 				irq_served = TRUE;
 			}
@@ -268,11 +268,10 @@ void Handle_Interrupt() {
 void handle_irq(unsigned int line, unsigned int dev){
     devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
     
-    word dev_status     = GET_DEV_STATUS(dev_reg,line); /*status of device*/
-   (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
-    
-    int subdev_trasm    = GET_SEM_OFFSET(dev_reg, line); /*1 if dev is trasm terminal, 0 otherwise*/
-    int *sem            = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+    word dev_status  = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+    int subdev_trasm = (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
+    int *sem         = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+
     pcb_t *p;
 
     if((p = semaphore_V(sem))==NULL){
@@ -296,18 +295,20 @@ void handle_irq(unsigned int line, unsigned int dev){
     }
 }
 
-void handle_irq_terminal(devreg_t *dev_reg){
+int handle_irq_terminal(devreg_t *dev_reg){
     if(IS_TERM_READY(dev_reg->term.transm_status)){  
         /* gestione del terminale di ricezione */
-        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-        return;
+        dev_reg->term.recv_command = IS_DEV_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+        return 0;
     }
     /* gestione del terminale di trasmissione */
-    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    dev_reg->term.transm_command = IS_DEV_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    return 1;
 }
 
-void handle_irq_other_dev(devreg_t *dev_reg){
+int handle_irq_other_dev(devreg_t *dev_reg){
     dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_reg->dtp.status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    return 0;
 }
 
 void Handle_Trap(void){
