@@ -257,7 +257,6 @@ void Handle_Interrupt() {
 			}
 		}
 	}
-
 	if(!irq_served){
 		PANIC(); /*irq but no interrupt served?*/
 	}
@@ -267,49 +266,50 @@ void Handle_Interrupt() {
 
 void handle_irq(unsigned int line, unsigned int dev){
     devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
-    
-    word dev_status  = GET_DEV_STATUS(dev_reg,line); /*status of device*/
-    int subdev_trasm = (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
-    int *sem         = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+    (line==IL_TERMINAL) ? handle_irq_terminal(line,dev,dev_reg) : handle_irq_other_dev(line,dev,dev_reg);
+}
 
+void handle_irq_terminal(unsigned int line, unsigned int dev, devreg_t *dev_reg){
+    word trasm  = dev_reg->term.transm_status;
+    word recv   = dev_reg->term.recv_status;
+    if(!IS_TERM_READY(trasm)){/* gestione del terminale di trasmissione */
+        dev_reg->term.transm_command = IS_TERM_IN_ERROR(trasm) ? DEV_CMD_RESET : DEV_CMD_ACK; /*notify to device*/
+        notifyEvent(line,dev,0,dev_reg,trasm);
+    }
+    if(!IS_TERM_READY(recv)){/* gestione del terminale di ricezione */
+        dev_reg->term.recv_command = IS_TERM_IN_ERROR(recv) ? DEV_CMD_RESET : DEV_CMD_ACK; /*notify to device*/
+        notifyEvent(line,dev,1,dev_reg,recv);
+    }
+}
+
+void handle_irq_other_dev(unsigned int line, unsigned int dev, devreg_t *dev_reg){
+    word dev_s = dev_reg->dtp.status;
+    dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_s) ? DEV_CMD_RESET : DEV_CMD_ACK; /*notify to device*/
+    notifyEvent(line,dev,0,dev_reg,dev_s);
+}
+
+void notifyEvent(unsigned int line, unsigned int dev, unsigned int subdev_trasm, devreg_t *dev_reg, word status){
+    int *sem = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
     pcb_t *p;
-
     if((p = semaphore_V(sem))==NULL){
         return;
     }
-    p->p_s.reg_return_0 = dev_status;
+    p->p_s.reg_return_0 = status; /*notify to process*/
     
     /*see next process in queue*/
     if((p=headBlocked(sem))==NULL){
         return;
     }
-
-    word command = p->p_s.reg_param_1;
-
+    word new_command = p->p_s.reg_param_1;
     switch(line){
         case IL_TERMINAL:
-            (subdev_trasm) ? (dev_reg->term.transm_command = command) : (dev_reg->term.recv_command = command);
+            (subdev_trasm) ? (dev_reg->term.transm_command = new_command) : (dev_reg->term.recv_command = new_command);
             break;
         default:
-            dev_reg->dtp.command = command;
+            dev_reg->dtp.command = new_command;
     }
 }
-
-int handle_irq_terminal(devreg_t *dev_reg){
-    if(IS_TERM_READY(dev_reg->term.transm_status)){  
-        /* gestione del terminale di ricezione */
-        dev_reg->term.recv_command = IS_DEV_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-        return 0;
-    }
-    /* gestione del terminale di trasmissione */
-    dev_reg->term.transm_command = IS_DEV_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-    return 1;
-}
-
-int handle_irq_other_dev(devreg_t *dev_reg){
-    dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_reg->dtp.status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-    return 0;
-}
+//----------------------------------------------------------------
 
 void Handle_Trap(void){
     state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );

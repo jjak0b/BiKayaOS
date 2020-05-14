@@ -27,17 +27,15 @@
 #define CDEV_BITMAP_DEV(line) *((unsigned int *)CDEV_BITMAP_ADDR(line))
 #define IS_IRQ_RAISED_FROM_I(dev_line,i) (i>=0 && i<8 && (CDEV_BITMAP_DEV(dev_line+3)&(1U<<i)))
 
-//#define CDEV_BITMAP_DEV_ADDR(line,dev) (CDEV_BITMAP_ADDR(line) + (dev))
-//#define IRQ_FROM(line,dev) (CDEV_BITMAP_DEV(line,dev) == 1U)
 /* We are 8 type of interrupt lines. But, only 5
 * lines are related to devices.
 */
 #define SEM_DEV_N ((N_EXT_IL+1)*N_DEV_PER_IL)
 
 //
-#define GET_SEM_OFFSET(dev_reg,line) (line!=IL_TERMINAL ? (0) : (IS_TERM_READY(dev_reg->term.transm_status)? (0) : (1)))
+//#define GET_SEM_OFFSET(dev_reg,line) (line!=IL_TERMINAL ? (0) : (IS_TERM_READY(dev_reg->term.transm_status)? (0) : (1)))
 //
-#define GET_SEM_INDEX(dev_reg,line,device) (N_DEV_PER_IL*(line-DEV_IL_START+GET_SEM_OFFSET(dev_reg,line))+device)
+//#define GET_SEM_INDEX(dev_reg,line,device) (N_DEV_PER_IL*(line-DEV_IL_START+GET_SEM_OFFSET(dev_reg,line))+device)
 /*
    matrice vettorizzata in righe x colonne 
    riga i: semafori della stessa (i-DEV_IL_START)-esima interrupt line
@@ -46,7 +44,7 @@
 */
 #define GET_SEM_INDEX_SUBDEV(line,device,subdevice) (N_DEV_PER_IL*(line - DEV_IL_START + ( line!=IL_TERMINAL ? 0 : subdevice ) )+device)
 //
-#define GET_DEV_STATUS(dev_reg, line) (line!=IL_TERMINAL ?(dev_reg->dtp.status):(GET_SEM_OFFSET(dev_reg,line) ?(dev_reg->term.recv_status):(dev_reg->term.transm_status)) ) 
+//#define GET_DEV_STATUS(dev_reg, line) (line!=IL_TERMINAL ?(dev_reg->dtp.status):(GET_SEM_OFFSET(dev_reg,line) ?(dev_reg->term.recv_status):(dev_reg->term.transm_status)) ) 
 
 void device_init();
 

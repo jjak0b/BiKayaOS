@@ -123,15 +123,29 @@ void handle_irq(unsigned int line, unsigned int dev);
 /**
  * @brief Gestione per i terminali di ricezione e trasmissione. Se è presente un codice di errore nello status del terminale 
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
+ * @param line linea su cui si è verificato l'interrupt
+ * @param dev device su cui si è verificato l'interrupt
  * @param puntatore al device register
  */
-int handle_irq_terminal(devreg_t *dev_reg);
+void handle_irq_terminal(unsigned int line, unsigned int dev, devreg_t *dev_reg);
 
 /**
  * @brief Gestione per tutti i device che non siano un terminale. Se è presente un codice di errore nello status del device 
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
+ * @param line linea su cui si è verificato l'interrupt
+ * @param dev device su cui si è verificato l'interrupt
  * @param puntatore al device register
  */
-int handle_irq_other_dev(devreg_t *dev_reg);
+void handle_irq_other_dev(unsigned int line, unsigned int dev, devreg_t *dev_reg);
 
+/**
+ * @brief Notifica successo/non successo di un operazione di IO al processo che l'ha richiesto. Se esiste un secondo processo in
+ * coda sul semaforo del device, fa partire la sua richiesta
+ * @param line linea su cui si è verificato l'interrupt
+ * @param dev device su cui si è verificato l'interrupt
+ * @param subdev_trasm 1 se si tratta del terminale di trasmissione, 0 in tutti gli altri casi
+ * @param dev_reg puntatore al device register
+ * @param status stato di risposta del device
+ */
+void notifyEvent(unsigned int line, unsigned int dev, unsigned int subdev_trasm, devreg_t *dev_reg, word status);
 #endif
