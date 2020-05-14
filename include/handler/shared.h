@@ -5,41 +5,11 @@
 
 #define SYSNO2INDEX( n )( (n)-1 )
 
+#define SYS_SPECPASSUP_AREA_OLD 0
+#define SYS_SPECPASSUP_AREA_NEW 1
 #define SYS_SPECPASSUP_TYPE_SYSBK 0
 #define SYS_SPECPASSUP_TYPE_TLB 1
 #define SYS_SPECPASSUP_TYPE_PGMTRAP 2
-
-
-void SpecPassup_init();
-
-/**
- * @brief Indica se è stato definito un handler superiore del tipo fornito
- * 
- * @param type 
- * @return int boooleano
- */
-int IsSetSpecPassup( int type );
-
-/**
- * @brief Imposta l'area fornita come handler superiore del tipo fornito
- * 
- * @param type 
- * @param area 
- * @return int 
- *         - 0 se è l'area stata impostata correttamente
- *         - -1 se il tipo fornito non è gestito, area == NULL, oppure se è già stata assegnata un'area all'handler del tipo specifiato
- */
-int SetSpecPassup( int type, state_t *area );
-
-/**
- * @brief Restituisce il puntatore dello stato dell'handler superiore, associato al tipo specificato
- * 
- * @param type 
- * @return state_t* 
- *          - NULL se IsSetSpecPassup avrebbe restituito TRUE
- *          - l'area altrimenti
- */
-state_t *GetSpecPassup( int type );
 
 /**
  * @brief Chiamante di system call che dati dei parametri forniti, chiama la specifica system call con i parametri dati
@@ -100,9 +70,19 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
  * @brief assegna pid il puntatore al processo corrente, a ppid il puntatore al processo genitore
  * @param pid 
  * @param ppid 
- * @return int 
  */
-int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
+void Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
+
+/**
+ * @brief Carica sul processore lo stato associato alla specPassup del type fornito, memorizzando nella sua old area, lo stato request
+ * 
+ * @param request 
+ * @param type 
+ * @return int 
+ *          -1 se il type fornito non è valido, oppure se non è stato associato un handler superiore al tipo fornito
+ *          Altrimenti non dovrebbe ritornare perchè il controllo dell'esecuzione cambia con quello dell handler associata
+ */
+int handle_specPassUp( state_t *request, int type );
 
 // Interrupt Handler functions and define
 //-------------------------------------------------------

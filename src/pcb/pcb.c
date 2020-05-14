@@ -123,6 +123,10 @@ void pcb_init( pcb_t *new ){
         new->chrono_start_tod = 0;
         new->kmode_timelapse = 0;
         new->umode_timelapse = 0;
+        int i, j;
+        for( i = 0; i < 3; i++ )
+            for( j = 0; j < 2; j++ )
+                new->specPassup[ i ][ j ] = NULL;
 #ifdef TARGET_UMPS
         new->p_s.entry_hi = 0;
         new->p_s.cause = 0;
@@ -130,7 +134,6 @@ void pcb_init( pcb_t *new ){
         new->p_s.pc_epc = 0;
         new->p_s.hi = 0;
         new->p_s.lo = 0;
-        int i;
         for( i = 0; i < STATE_GPR_LEN; i++ ){
             new->p_s.gpr[ i ] = 0;
         }

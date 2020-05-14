@@ -28,35 +28,6 @@
 #include <shared/device/terminal.h>
 #include <system/shared/registers.h>
 
-HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
-HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
-
-void SpecPassup_init() {
-    bitmap_specPassup = 0;
-}
-
-int IsSetSpecPassup( int type ) {
-    byte mask_specPassup_type = 1 << type;
-    return (bitmap_specPassup & mask_specPassup_type) == mask_specPassup_type;
-}
-
-int SetSpecPassup( int type, state_t *area ) {
-    if( area != NULL && ( type >= 0 && type <= 2 ) && !IsSetSpecPassup( type ) ) {
-        /* copia la area corrispondente e imposta l'i-esmi bit della bitmap relativo al tipo fornito*/
-        moveState(area, &specPassup[ type ]);
-        bitmap_specPassup |= (1 << type);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-state_t *GetSpecPassup( int type ) {
-    if( IsSetSpecPassup( type ) ) {
-        return &specPassup[ type ];
-    }
-    return NULL;
-}
-
 word Syscaller( state_t *state, word sysNo, word param1, word param2, word param3, word *returnValue ) {
     int b_hasReturnValue = FALSE;
     switch( sysNo ) {
@@ -85,17 +56,12 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             *returnValue = (int) Sys7_SpecPassup( state, (int)param1, (state_t*)param2, (state_t*)param3 );
             break;
         case GETPID:
-            b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys8_GetPID( (pcb_t**)param1, (pcb_t**)param2 );
+            Sys8_GetPID( (pcb_t**)param1, (pcb_t**)param2 );
             break;
         default: {
-            state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
-            if( area != NULL ) {
-                LDST( area );
-            }
-            else {
-                b_hasReturnValue = TRUE;
+            if( handle_specPassUp( state, SYS_SPECPASSUP_TYPE_SYSBK ) ){
                 *returnValue = -1;
+                b_hasReturnValue = TRUE;
                 scheduler_StateToTerminate( NULL, FALSE );
             }
             break;
@@ -124,22 +90,21 @@ int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wal
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
     /* prima di eseguire viene controllata la validità dei puntatori forniti */
-    if ( child_state && child_pid ) {
-        *child_pid = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+    if ( child_state != NULL ) {
+        pcb_t *child = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+        if ( child != NULL ) {
+            moveState( child_state, &child->p_s );
+            child->priority = child_priority;
+            child->original_priority = child_priority;
+            insertChild( scheduler_GetRunningProcess(), child );
+            scheduler_AddProcess( child );
+            if( child_pid != NULL )
+                *child_pid = child;
 
-        if ( *child_pid ) {
-            moveState( child_state, &(*child_pid)->p_s );
-            (*child_pid)->priority = child_priority;
-            (*child_pid)->original_priority = child_priority;
-            insertChild( scheduler_GetRunningProcess(), *child_pid );
-            scheduler_AddProcess( *child_pid );
             return 0;
-        }
-        else
-            return (-1);
+        } 
     }
-    else
-        return (-1);
+    return -1;
 }
 
 int Sys3_TerminateProcess( pcb_t *pid ) {
@@ -191,29 +156,43 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
 }
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {
-    if( !SetSpecPassup( type, new_area ) ) {
-       moveState( currState, old_area );
-       return 0;
+    pcb_t* p = scheduler_GetRunningProcess();
+    if( p != NULL && (0 <= type && type < 3) ) {
+        if( p->specPassup[ type ][ SYS_SPECPASSUP_AREA_NEW ] == NULL ) {
+            p->specPassup[ type ][ SYS_SPECPASSUP_AREA_NEW ] = new_area;
+            p->specPassup[ type ][ SYS_SPECPASSUP_AREA_OLD ] = old_area;
+            return 0;
+        }
+        else {
+            scheduler_StateToTerminate( p, TRUE );
+        }
     }
-
-    scheduler_StateToTerminate( NULL, FALSE );
     return -1;
 }
 
-int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
+void Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
     /* la procedura ritorna errore in caso di puntatori non validi */
-    if ( pid && ppid ) {
-        *pid = scheduler_GetRunningProcess();
+    pcb_t *p = scheduler_GetRunningProcess();
+    if ( pid != NULL )
+        *pid = p;
 
-        if ( *pid )
-             *ppid = (*pid)->p_parent;
-        else
-            return (-1);
-        
-        return 0;
+    if ( p != NULL && ppid != NULL )
+        *ppid = p->p_parent;
+}
+
+int handle_specPassUp( state_t *request, int type ) {
+    if( (0 <= type && type < 3) ) {
+        pcb_t *p = scheduler_GetRunningProcess();
+        state_t *new_area = p->specPassup[ type ][ SYS_SPECPASSUP_AREA_NEW ];
+        state_t *old_area = p->specPassup[ type ][ SYS_SPECPASSUP_AREA_OLD ];
+        if( p != NULL && new_area != NULL ) {
+            if( old_area != NULL ) {
+                moveState( request, old_area );
+            }
+            LDST( new_area );
+        }
     }
-
-    return (-1);
+    return -1;
 }
 
 // Interrupt Handler
@@ -303,7 +282,7 @@ void notifyEvent(unsigned int line, unsigned int dev, unsigned int subdev_trasm,
     word new_command = p->p_s.reg_param_1;
     switch(line){
         case IL_TERMINAL:
-            (subdev_trasm) ? (dev_reg->term.transm_command = new_command) : (dev_reg->term.recv_command = new_command);
+            (!subdev_trasm) ? (dev_reg->term.transm_command = new_command) : (dev_reg->term.recv_command = new_command);
             break;
         default:
             dev_reg->dtp.command = new_command;
@@ -312,24 +291,24 @@ void notifyEvent(unsigned int line, unsigned int dev, unsigned int subdev_trasm,
 //----------------------------------------------------------------
 
 void Handle_Trap(void){
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
-    if( area != NULL ) {
-        LDST( area );
+    state_t *request    = (state_t *) PGMTRAP_OLDAREA;
+    if( handle_specPassUp( request, SYS_SPECPASSUP_TYPE_PGMTRAP ) ){
+        scheduler_StateToTerminate( NULL, FALSE );
+        scheduler_schedule( TRUE );
     }
     PANIC();
 }
 
 void Handle_TLB(void){
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
-    if( area != NULL ) {
-        LDST( area );
+    state_t *request    = (state_t *) TLB_OLDAREA;
+    if( handle_specPassUp( request, SYS_SPECPASSUP_TYPE_TLB ) ){
+        scheduler_StateToTerminate( NULL, FALSE );
+        scheduler_schedule( TRUE );
     }
     PANIC();
 }
 
 void Handle_breakpoint() {
-    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
-    if( area != NULL ) {
-        LDST( area );
-    }
+    state_t *request    = (state_t *) SYSBK_OLDAREA;
+    handle_specPassUp( request, SYS_SPECPASSUP_TYPE_SYSBK );
 }

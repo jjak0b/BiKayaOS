@@ -30,7 +30,6 @@
 int main(){
 	//---------------------Inizialializzazione del sistema
 	initAreas();
-	SpecPassup_init();
 	initPcbs();
 	initASL();
 	device_init();
