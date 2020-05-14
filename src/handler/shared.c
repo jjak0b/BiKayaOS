@@ -26,6 +26,7 @@
 #include <system/shared/device/device.h>
 #include <utilities/semaphore.h>
 #include <shared/device/terminal.h>
+#include <system/shared/registers.h>
 
 HIDDEN state_t specPassup[3]; /* stati del processore dedicati a handler di livello superiore specifici */
 HIDDEN byte bitmap_specPassup; /* bitmap con i flag settati sulle i-esime posizioni se la specPassup[ i ] è assegnata */
@@ -60,7 +61,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
     int b_hasReturnValue = FALSE;
     switch( sysNo ) {
         case GETCPUTIME:
-            Sys1_GetCPUTime( state, (word*)param1, (word*)param2, (word*)param3 );
+            Sys1_GetCPUTime( (unsigned int*)param1, (unsigned int*)param2, (unsigned int*)param3 );
             break;
         case CREATEPROCESS:
             b_hasReturnValue = TRUE;
@@ -68,7 +69,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case TERMINATEPROCESS:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys3_TerminateProcess( (void*) param1 );
+            *returnValue = (int) Sys3_TerminateProcess( (pcb_t*) param1 );
             break;
         case VERHOGEN:
             Sys4_Verhogen( (int*)param1 );
@@ -95,7 +96,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             else {
                 b_hasReturnValue = TRUE;
                 *returnValue = -1;
-                scheduler_StateToTerminate( FALSE );
+                scheduler_StateToTerminate( NULL, FALSE );
             }
             break;
         }
@@ -104,8 +105,21 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
     return b_hasReturnValue;
 }
 
-void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock ) {
-    // TODO
+int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wallclock ) {
+    /* prima viene effettuato il controllo validità puntatori */
+    if ( user && kernel && wallclock ) {
+        scheduler_UpdateProcessRunningTime();
+        pcb_t *p = scheduler_GetRunningProcess();
+        if (p == NULL)
+            return (-1);
+        *user = p->umode_timelapse;
+        *kernel = p->kmode_timelapse;
+        *wallclock = p->chrono_start_tod - p->first_activation_tod;
+        scheduler_StartProcessChronometer();
+        return 0;
+    }
+    else
+        return (-1);    
 }
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
@@ -129,41 +143,8 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
 }
 
 int Sys3_TerminateProcess( pcb_t *pid ) {
-    scheduler_t *s = scheduler_Get();
-
-    if ( pid ) {
-        if ( outProcQ( &s->ready_queue, pid ) == NULL )
-            return (-1); /* se il PCB non esiste ritorna errore */
-    }
-    else
-        pid = scheduler_GetRunningProcess();
-
-    /* ogni processo figlio viene rimosso da un'eventuale coda di blocco su semaforo */
-    struct list_head *child_iter;
-    pcb_t *dummy;
-
-    
-    list_for_each( child_iter, &pid->p_child ) {
-        dummy = container_of( child_iter, pcb_t, p_sib );
-        int *key = dummy->p_semkey;
-        if ( key ) {
-            list_del( &dummy->p_next ); /* rimozione del PCB dalla coda dei processi bloccati */
-
-            /* aumento del valore del semaforo. se positivo si risveglia il primo in coda */
-            *key += 1;
-            if ( *key > 0 )
-                scheduler_AddProcess( removeBlocked( key ) );
-        }
-    }
-
-    /* se il processo da terminare è quello corrente, si passa il lavoro allo scheduler;
-    altrimenti il relativo pcb viene tolto dalla ready queue e inserito nella lista free */
-    if ( pid == scheduler_GetRunningProcess() )
-        scheduler_StateToTerminate( TRUE );
-    else
-        freePcb( outProcQ( &s->ready_queue, pid ) );
-
-    return 0;
+    int b_error = scheduler_StateToTerminate( pid, TRUE );
+    return ( b_error ? -1 : 0 );
 }
 
 void Sys4_Verhogen( int* semaddr ) {
@@ -172,11 +153,12 @@ void Sys4_Verhogen( int* semaddr ) {
 }
 
 void Sys5_Passeren( int* semaddr ) {
-    int status = semaphore_P( semaddr, scheduler_GetRunningProcess() );
+    pcb_t *pid = scheduler_GetRunningProcess();
+    int status = semaphore_P( semaddr, pid );
     // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
     // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
     if( status == 1 ) {
-        scheduler_StateToTerminate( FALSE );
+        scheduler_StateToTerminate( pid, FALSE );
     }
 }
 
@@ -186,22 +168,25 @@ void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     device_GetInfo( devreg, &devLine, &devNo );
 
     int *semKey = device_GetSem( devLine, devNo, subdevice );
+    pcb_t *pid = scheduler_GetRunningProcess();
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
-    int b_error = semaphore_P( semKey, scheduler_GetRunningProcess() );
-    if( b_error ) {
-        scheduler_StateToTerminate( FALSE );
-    }
-    
-    if( devLine == IL_TERMINAL ) {
-        if( subdevice ) {
-            devreg->term.transm_command = command;
+    if( *semKey >= 0 ){
+        if( devLine == IL_TERMINAL ) {
+            if( !subdevice ) {
+                devreg->term.transm_command = command;
+            }
+            else {
+                devreg->term.recv_command = command;
+            }
         }
         else {
-            devreg->term.recv_command = command;
+            devreg->dtp.command = command;
         }
     }
-    else {
-        devreg->dtp.command = command;
+
+    int b_error = semaphore_P( semKey, pid );
+    if( b_error ) {
+        scheduler_StateToTerminate( pid, FALSE );
     }
 }
 
@@ -211,7 +196,7 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
        return 0;
     }
 
-    scheduler_StateToTerminate( FALSE );
+    scheduler_StateToTerminate( NULL, FALSE );
     return -1;
 }
 
@@ -233,15 +218,11 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
 
 // Interrupt Handler
 //----------------------------------------------------------------
-void Handler_Interrupt(void){
-	state_t *request    = (state_t *) INT_OLDAREA;
-	word cause          = request->cause; /*CP15_Cause per uARM*/
-    word exc_cause      = CAUSE_GET_EXCCODE(request->cause);
+void Handle_Interrupt() {
+    state_t *request    = (state_t *) INT_OLDAREA;
+	word cause          = request->reg_cause;
+    word exc_cause      = CAUSE_EXCCODE_GET( cause );
 
-	#ifdef TARGET_UARM
-	request->pc -= WORD_SIZE;
-	#endif
-	
 	if(exc_cause != EXC_INTERRUPT){
 		PANIC(); /*REQ ERROR*/
 	}
@@ -269,8 +250,8 @@ void Handler_Interrupt(void){
 	unsigned int dev_line;
 	unsigned int dev;
 	for(dev_line=0; dev_line<N_EXT_IL; dev_line++){
-		for(dev=0; dev_line<N_DEV_PER_IL; dev++){
-			if(IRQ_FROM(dev_line, dev)){
+        for(dev=0; dev<N_DEV_PER_IL; dev++){
+            if(IS_IRQ_RAISED_FROM_I(dev_line, dev)){
 				handle_irq(dev_line+3, dev);
 				irq_served = TRUE;
 			}
@@ -287,30 +268,23 @@ void Handler_Interrupt(void){
 void handle_irq(unsigned int line, unsigned int dev){
     devreg_t *dev_reg   = (devreg_t *) DEV_REG_ADDR(line, dev);
     
-    word dev_status     = GET_DEV_STATUS(dev_reg,line); /*status of device*/
-   (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
-    
-    int subdev_trasm    = GET_SEM_OFFSET(dev_reg, line); /*1 if dev is trasm terminal, 0 otherwise*/
-    int *sem            = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+    word dev_status  = GET_DEV_STATUS(dev_reg,line); /*status of device*/
+    int subdev_trasm = (line==IL_TERMINAL) ? handle_irq_terminal(dev_reg) : handle_irq_other_dev(dev_reg);
+    int *sem         = device_GetSem(line, dev, subdev_trasm); /*sem associated with device*/
+
     pcb_t *p;
 
     if((p = semaphore_V(sem))==NULL){
         return;
     }
-    p->p_s.reg_v0 = dev_status; /*registro a1 per uARM*/
+    p->p_s.reg_return_0 = dev_status;
     
     /*see next process in queue*/
     if((p=headBlocked(sem))==NULL){
         return;
     }
 
-    word command;
-    #ifdef TARGET_UMPS
-        command = p->p_s.reg_a1;
-    #endif
-    #ifdef TARGET_UARM
-        command = p->p_s.a2;
-    #endif
+    word command = p->p_s.reg_param_1;
 
     switch(line){
         case IL_TERMINAL:
@@ -321,16 +295,41 @@ void handle_irq(unsigned int line, unsigned int dev){
     }
 }
 
-void handle_irq_terminal(devreg_t *dev_reg){
+int handle_irq_terminal(devreg_t *dev_reg){
     if(IS_TERM_READY(dev_reg->term.transm_status)){  
         /* gestione del terminale di ricezione */
-        dev_reg->term.recv_command = IS_TERM_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
-        return;
+        dev_reg->term.recv_command = IS_DEV_IN_ERROR(dev_reg->term.recv_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+        return 0;
     }
     /* gestione del terminale di trasmissione */
-    dev_reg->term.transm_command = IS_TERM_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    dev_reg->term.transm_command = IS_DEV_IN_ERROR(dev_reg->term.transm_status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    return 1;
 }
 
-void handle_irq_other_dev(devreg_t *dev_reg){
+int handle_irq_other_dev(devreg_t *dev_reg){
     dev_reg->dtp.command = IS_DEV_IN_ERROR(dev_reg->dtp.status) ? DEV_CMD_RESET : DEV_CMD_ACK;
+    return 0;
+}
+
+void Handle_Trap(void){
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_PGMTRAP );
+    if( area != NULL ) {
+        LDST( area );
+    }
+    PANIC();
+}
+
+void Handle_TLB(void){
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_TLB );
+    if( area != NULL ) {
+        LDST( area );
+    }
+    PANIC();
+}
+
+void Handle_breakpoint() {
+    state_t *area = GetSpecPassup( SYS_SPECPASSUP_TYPE_SYSBK );
+    if( area != NULL ) {
+        LDST( area );
+    }
 }

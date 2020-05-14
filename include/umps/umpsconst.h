@@ -31,3 +31,4 @@
 #define INTERVAL_TIMER_OFF    (~INTERVAL_TIMER_ON)
 
 #define CAUSE_IP_GET(cause, line) ((cause&CAUSE_IP(line)) != 0)
+#define CAUSE_EXCCODE_GET( cause ) (CAUSE_GET_EXCCODE( cause ))

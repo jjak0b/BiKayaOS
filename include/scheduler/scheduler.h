@@ -33,6 +33,10 @@ struct scheduler_t {
     /* booleano indicante se il processo attuale non può continuare lo scheduling (TRUE) oppure continuare mantenere il processo schedulato (FALSE) */
     int b_force_switch;
 
+    /* Pcb utilizzato per mettere la macchina in stato di idle */
+    pcb_t idlePcb;
+    int b_has_idle;
+
 };
 typedef struct scheduler_t scheduler_t;
 
@@ -92,29 +96,31 @@ int scheduler_StateToReady();
 /**
  * @brief aggiunge il processo corrente alla ASL con associato la chiave fornita
  * 
- * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale
- * @PostCondition Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
+ * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale.
+ *               Inoltre il processo deve essere nella ready queue oppure o deve essere il processo in esecuzione
+ * @PostCondition se p == NULL sarà preso in considerazione il processo corrente. Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
  * @param semKey chiave da associare al semaforo
+ * @param p processo da sospendere sulla coda del semaforo
  * @return int 
  * 			* -1 se nessun processo è attualmente assegnato come processo corrente
  * 			* 0 se l'operazione è stata effettuata correttamente
  * 			* 1 se non è stato possibile aggiungere il processo corrente alla ASL (impossibile allocare semaforo)
  */
-int scheduler_StateToWaiting( int* semKey );
+int scheduler_StateToWaiting( pcb_t* p, int* semKey );
 
 /**
- * @brief Dealloca il descrittore del processo che era in esecuzione, rimuovendo eventualmente la sua progenie
- * 
+ * @brief Dealloca il descrittore del processo associato al pid fornito, rimuovendo eventualmente la sua progenie
  * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale
  * @PostCondition Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
  * @return int 
- * 			* 1 se non c'è alcun processo tracciato dallo scheduler in esecuzione
+ * 			* 1 se pid == NULL e non c'è alcun processo tracciato dallo scheduler in esecuzione
  * 			* 0 altrimenti se è avvenuto tutto correttamente
- * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue il descrittore del processo in esecuzione e tutta la sua progenie,
+ * @param pid identificatore del processo da terminare, se == NULL sarà considerato il processo attualmente in esecuzione
+ * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue o dalla semd wait queue il descrittore del processo in esecuzione e tutta la sua progenie,
  * 									Se FALSE rimuove e dealloca solo il descrittore in esecuzione, ma tutti i suoi figli non avranno padre e ogni figlio non avrà fratelli
  * 										cioè saranno indipendenti tra loro
  */
-int scheduler_StateToTerminate( int b_flag_terminate_progeny  );
+int scheduler_StateToTerminate( pcb_t* pid, int b_flag_terminate_progeny );
 
 /**
  * @brief Restituisce il puntatore dell'attuale pcb_t in esecuzione
@@ -143,9 +149,9 @@ void scheduler_AddProcess( pcb_t *p );
 int scheduler_RemoveProcess( pcb_t *p );
 
 /**
- * @brief 	wrapper di pcb_RemoveProgenyQ con passata la ready queue dello scheduler
- * @PostCondition 	Se p è il processo in esecuzione allora viene deassociato nella struttura dello scheduler e deallocato.
- * 					Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.
+ * @brief   Dealloca dopo aver rimosso il descrittore fornito e tutta la sua progenie dalla ready queue o dalla wait queue del semaforo associato al pcb
+ *          Non avviene alcuna rimozione nella lista dei fratelli e del padre di p.
+ * @PostCondition 	Se p o uno della sua progenie è il processo in esecuzione allora viene deassociato nella struttura dello scheduler e deallocato anche esso.
  * 
  * @param p descrittore del processo da cui partire a rimuovere la progenie
  * @return int 
@@ -153,5 +159,16 @@ int scheduler_RemoveProcess( pcb_t *p );
  * 			* 0 altrimenti
  */
 int scheduler_RemoveProgeny( pcb_t* p );
+
+/**
+ * @brief   Aggiorna il TOD dell'ultimo start di cronometro
+ *          Se è la prima volta che il processo viene avviato, aggiorna anche il TOD di primo avvio
+ */
+void scheduler_StartProcessChronometer();
+
+/**
+ * @brief   Aggiorna il tempo totale trascorso dal processo a lavorare in Kernel o User mode
+ */
+void scheduler_UpdateProcessRunningTime();
 
 #endif

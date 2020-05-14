@@ -9,11 +9,6 @@
 #define SYS_SPECPASSUP_TYPE_TLB 1
 #define SYS_SPECPASSUP_TYPE_PGMTRAP 2
 
-#ifdef TARGET_UARM
-#define reg_v0 a1
-#define cause CP15_Cause
-#define CAUSE_GET_EXCCODE(cause) CAUSE_EXCCODE_GET(cause)
-#endif
 
 void SpecPassup_init();
 
@@ -63,7 +58,15 @@ state_t *GetSpecPassup( int type );
  */
 word Syscaller( state_t* currState, word sysno, word param1, word param2, word param3, word *returnValueAddr );
 
-void Sys1_GetCPUTime( state_t* currState, word *user, word *kernel, word *wallclock );
+/**
+ * @brief Aggiorna il calcolo delle tempistiche e assegna i valori ricavati ai puntatori
+ * Alla fine fa ripartire il cronometro
+ * @param user 
+ * @param kernel 
+ * @param wallclock 
+ * @return int 
+ */
+int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wallclock );
 
 /**
  * @brief Implementazione della syscall CHILD_PRIORITY
@@ -103,7 +106,13 @@ int Sys8_GetPID( pcb_t **pid, pcb_t **ppid );
 
 // Interrupt Handler functions and define
 //-------------------------------------------------------
-void Handler_Interrupt(void);
+void Handle_Interrupt( void );
+
+void Handle_Trap( void );
+
+void Handle_TLB( void );
+
+void Handle_breakpoint( void );
 
 /**
  * @brief Gestore per interrupt device. Richiama i metodi sottostanti in base
@@ -116,13 +125,13 @@ void handle_irq(unsigned int line, unsigned int dev);
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
  * @param puntatore al device register
  */
-void handle_irq_terminal(devreg_t *dev_reg);
+int handle_irq_terminal(devreg_t *dev_reg);
 
 /**
  * @brief Gestione per tutti i device che non siano un terminale. Se è presente un codice di errore nello status del device 
  * scrive nel command register il comando RESET, altrimenti scrive il comando ACK
  * @param puntatore al device register
  */
-void handle_irq_other_dev(devreg_t *dev_reg);
+int handle_irq_other_dev(devreg_t *dev_reg);
 
 #endif

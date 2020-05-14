@@ -24,6 +24,7 @@
 #include <handler/shared.h>
 
 
+
 void initAreas(void){
 	initSysCallArea();
 	initTrapArea();

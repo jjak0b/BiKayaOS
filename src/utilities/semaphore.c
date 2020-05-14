@@ -4,13 +4,9 @@
 #include <pcb/pcb.h>
 
 int semaphore_P( int *semkey, pcb_t * p ) {
-    int b_error = FALSE;
-    if( p == NULL )
-        return !b_error;
-    
+    int b_error = 0;
     if( --(*semkey) < 0 ) {
-        scheduler_RemoveProcess( p );
-        b_error = insertBlocked( semkey, p );
+        b_error = scheduler_StateToWaiting( p, semkey );
     }
     return b_error;
 }
@@ -19,8 +15,10 @@ pcb_t *semaphore_V( int *semkey ) {
     pcb_t *p = NULL;
     if( ++(*semkey) <= 0 ) {
         p = removeBlocked( semkey );
-        if( p != NULL )
+        if( p != NULL ){
+            p->p_semkey = NULL;
             scheduler_AddProcess( p );
+        }
     }
     return p;
 }

@@ -100,8 +100,17 @@ void insertProcQ(struct list_head *head, pcb_t *p){
     l’elemento rimosso.
 */
 pcb_t *allocPcb(void){
-    pcb_t *new;
-    new = removeProcQ(pcbFree_h);
+    pcb_t *new = removeProcQ(pcbFree_h);
+    pcb_init( new );
+    return new;
+}
+
+/*
+    inizializza
+    tutti i campi (NULL/0)
+    e le liste come liste vuote
+*/
+void pcb_init( pcb_t *new ){
     if(new != NULL){
         //inizializzazione pcb    
         INIT_LIST_HEAD(&(new->p_child));
@@ -110,6 +119,10 @@ pcb_t *allocPcb(void){
         new->p_parent = NULL;
         new->p_semkey = NULL;
         new->priority = 0;
+        new->first_activation_tod = 0;
+        new->chrono_start_tod = 0;
+        new->kmode_timelapse = 0;
+        new->umode_timelapse = 0;
 #ifdef TARGET_UMPS
         new->p_s.entry_hi = 0;
         new->p_s.cause = 0;
@@ -147,7 +160,6 @@ pcb_t *allocPcb(void){
         new->p_s.TOD_Low = 0;
 #endif
     }
-    return new;
 }
 
 /* PCB QUEUE HANDLING */
