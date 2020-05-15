@@ -74,14 +74,14 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
 int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wallclock ) {
     /* prima viene effettuato il controllo validità puntatori */
     if ( user && kernel && wallclock ) {
-        scheduler_UpdateProcessRunningTime();
+        scheduler_UpdateProcessRunningTime( TRUE );
         pcb_t *p = scheduler_GetRunningProcess();
         if (p == NULL)
             return (-1);
-        *user = p->umode_timelapse;
-        *kernel = p->kmode_timelapse;
-        *wallclock = p->chrono_start_tod - p->first_activation_tod;
+        *user = p->user_timelapse;
+        *kernel = p->kernel_timelapse;
         scheduler_StartProcessChronometer();
+        *wallclock = p->chrono_start_tod - p->first_activation_tod;
         return 0;
     }
     else

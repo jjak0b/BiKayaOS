@@ -121,8 +121,8 @@ void pcb_init( pcb_t *new ){
         new->priority = 0;
         new->first_activation_tod = 0;
         new->chrono_start_tod = 0;
-        new->kmode_timelapse = 0;
-        new->umode_timelapse = 0;
+        new->kernel_timelapse = 0;
+        new->user_timelapse = 0;
         int i, j;
         for( i = 0; i < 3; i++ )
             for( j = 0; j < 2; j++ )

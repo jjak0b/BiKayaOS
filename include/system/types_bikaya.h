@@ -40,11 +40,11 @@ typedef struct pcb_t {
     /* activation TODs; running timelapses */
     /* chrono start tod = tod of the last chronometer activation */
     unsigned int first_activation_tod, chrono_start_tod;
-    unsigned int kmode_timelapse, umode_timelapse;
+    unsigned int kernel_timelapse, user_timelapse;
 
     /*
-        stati del processore dedicati a handler di livello superiore specifici
-        nelle righe sono specificati i puntatori alle zone di memoria della old e new area rispettivamente
+        processor states used for top level handlers
+        each rows has 2 pointers of old and new areas
     */
     state_t *specPassup[3][2];
 } pcb_t;

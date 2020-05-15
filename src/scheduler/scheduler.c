@@ -102,6 +102,9 @@ int scheduler_schedule( int b_force_switch ) {
 			scheduler_StartProcessChronometer(); // giusto per non ottenere valori strani nelle tempistiche
 		}
 	}
+	
+	/* se il processo corrente è ancora tracciato, ne salvo il kernel time */
+	scheduler_UpdateProcessRunningTime( TRUE );
 
 	if( b_should_switch ) {
 		scheduler_DoAging(); /* Incrementa priorità per evitare starvation dei processi */
@@ -110,13 +113,11 @@ int scheduler_schedule( int b_force_switch ) {
 			scheduler_StateToReady(); /* rimette nella ready, ripristiando priorità */
 		}
 		scheduler->running_p = removeProcQ( &scheduler->ready_queue );
-		scheduler_UpdateProcessRunningTime();
 		scheduler_StartProcessChronometer();
 		/* Rendendo questa funzione una macro diminuisce il numero di tick richiesti per la sua chiamata */
 		SET_INTERVAL_TIMER( TIME_SLICE );
 	}
 	else {
-		scheduler_UpdateProcessRunningTime();
 		scheduler_StartProcessChronometer();
 		// TODO: Re-impostare time slice rimanente oppure ignorare ?
 	}
@@ -129,7 +130,7 @@ void scheduler_UpdateContext( state_t* state ) {
 	if( scheduler->running_p != NULL ){
 		moveState( state, &scheduler->running_p->p_s );
 
-		scheduler_UpdateProcessRunningTime();
+		scheduler_UpdateProcessRunningTime( FALSE );
 		scheduler_StartProcessChronometer();
 	}
 }
@@ -139,7 +140,7 @@ int scheduler_StateToReady() {
 	if( scheduler->running_p != NULL ) {
 		scheduler->running_p->priority = scheduler->running_p->original_priority;
 		scheduler_AddProcess( scheduler->running_p );
-		scheduler_UpdateProcessRunningTime();
+		scheduler_UpdateProcessRunningTime( TRUE );
 		scheduler->running_p = NULL;
 		scheduler->b_force_switch = TRUE;
 		return 0;
@@ -288,25 +289,15 @@ void scheduler_StartProcessChronometer() {
 		p->first_activation_tod = p->chrono_start_tod;
 }
 
-void scheduler_UpdateProcessRunningTime() {
+void scheduler_UpdateProcessRunningTime( int b_isKernelTime ) {
 	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
 
 	if( p == NULL ) return;
 
 	unsigned int *todlo = (unsigned int *) BUS_REG_TOD_LO;
 
-	unsigned int kernelmode;
-
-	#ifdef TARGET_UARM
-	kernelmode = (p->p_s.cpsr & STATUS_SYS_MODE) == STATUS_SYS_MODE;
-	#endif
-
-	#ifdef TARGET_UMPS
-	kernelmode = (p->p_s.status & STATUS_KUp) == STATUS_KUp;
-	#endif
-
-	if ( kernelmode )
-		p->kmode_timelapse += *todlo - p->chrono_start_tod;
+	if ( b_isKernelTime )
+		p->kernel_timelapse += *todlo - p->chrono_start_tod;
 	else
-		p->umode_timelapse += *todlo - p->chrono_start_tod;
+		p->user_timelapse += *todlo - p->chrono_start_tod;
 }
