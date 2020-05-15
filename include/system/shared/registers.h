@@ -7,7 +7,7 @@
 #define reg_param_1 a2
 #define reg_param_2 a3
 #define reg_param_3 a4
-#define reg_return_0 v1
+#define reg_return_0 a1
 #define reg_cause CP15_Cause
 #define reg_tod_hi TOD_Hi
 #define reg_tod_low TOD_Low
