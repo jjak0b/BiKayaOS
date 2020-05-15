@@ -119,6 +119,7 @@ void pcb_init( pcb_t *new ){
         new->p_parent = NULL;
         new->p_semkey = NULL;
         new->priority = 0;
+        new->original_priority = 0;
         new->first_activation_tod = 0;
         new->chrono_start_tod = 0;
         new->kernel_timelapse = 0;
