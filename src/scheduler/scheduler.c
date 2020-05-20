@@ -34,8 +34,11 @@ HIDDEN scheduler_t *scheduler;
  * @PostCondition Se viene rimosso dalla wait queue di un semaforo, incrementa il valore del semaforo stesso, quindi il suo p_semkey diventa NULL
  * 
  * @param p il processo da rimuovere
+ * @return int
+ *          * FALSE se è p esiste in qualche coda ed è stato rimosso correttamente
+ *          * TRUE se p == NULL oppure se p non è stato trovato
  */
-void scheduler_RemoveProcessFromAnyQ( pcb_t *p );
+int scheduler_RemoveProcessFromAnyQ( pcb_t *p );
 
 void idle_entry(){ while( TRUE ) WAIT(); }
 
@@ -163,7 +166,7 @@ int scheduler_StateToWaiting( pcb_t *p, int* semKey ) {
 	return b_result;
 }
 
-void scheduler_RemoveProcessFromAnyQ( pcb_t *p ) {
+int scheduler_RemoveProcessFromAnyQ( pcb_t *p ) {
 	pcb_t *removed = NULL;
 
 	if( p == scheduler->running_p ) {
@@ -183,6 +186,7 @@ void scheduler_RemoveProcessFromAnyQ( pcb_t *p ) {
 	else if( removed == NULL ) {
 		removed = outProcQ( &(scheduler->ready_queue), p );
 	}
+	return removed == NULL;
 }
 
 int scheduler_StateToTerminate( pcb_t *pid, int b_flag_terminate_progeny ) {
@@ -195,18 +199,20 @@ int scheduler_StateToTerminate( pcb_t *pid, int b_flag_terminate_progeny ) {
 	}
 	/* Lo scollego dal padre */
 	outChild( pid );
-
+	int b_error = FALSE;
 	if( b_flag_terminate_progeny ) {
-		scheduler_RemoveProgeny( pid );
+		b_error = scheduler_RemoveProgeny( pid );
 	}
 	else {
-		scheduler_RemoveProcessFromAnyQ( pid );
-		pcb_SetChildrenParent( pid, NULL );
-		if( pid != &scheduler->idlePcb )
-			freePcb( pid );
+		b_error = scheduler_RemoveProcessFromAnyQ( pid );
+		if( !b_error ){
+			pcb_SetChildrenParent( pid, NULL );
+			if( pid != &scheduler->idlePcb )
+				freePcb( pid );
+		}
 	}
 
-	return 0;
+	return b_error;
 }
 
 int scheduler_RemoveProgeny( pcb_t* p ) {
@@ -228,7 +234,9 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
      * e poi elimina il padre appena elaborato dallo stack per deallocarlo
      */
 	
-	scheduler_RemoveProcessFromAnyQ( parent );
+	if( !scheduler_RemoveProcessFromAnyQ( parent ) ){
+		return -1;
+	}
 	list_add( &p->p_next, &pcb_stack );
 	
 	while( !list_empty( &pcb_stack ) ) {
