@@ -93,14 +93,15 @@ int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wal
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
     /* prima di eseguire viene controllata la validità dei puntatori forniti */
-    if ( child_state && child_pid ) {
+    if ( child_state != NULL ) {
         pcb_t *child = allocPcb();
         /* ritorna 0 solo se c'era un PCB disponibile */
         if ( child != NULL ) {
             moveState( child_state, &child->p_s );
             child->priority = child_priority;
             child->original_priority = child_priority;
-            *child_pid = child;
+            if ( child_pid != NULL)
+                *child_pid = child;
 
             insertChild( scheduler_GetRunningProcess(), child );
             scheduler_AddProcess( child );
