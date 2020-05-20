@@ -49,7 +49,8 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             Sys5_Passeren( (int*)param1 );
             break;
         case WAITIO:
-            Sys6_DoIO( param1, (word*)param2, (int)param3 );
+            b_hasReturnValue = TRUE;
+            *returnValue = (int) Sys6_DoIO( param1, (word*)param2, (int)param3 );
             break;
         case SPECPASSUP:
             b_hasReturnValue = TRUE;
@@ -135,21 +136,19 @@ int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     int *semKey = device_GetSem( devLine, devNo, subdevice );
     int b_error = semKey == NULL;
     pcb_t *pid = scheduler_GetRunningProcess();
-    if( !b_error ) {
-        b_error = semaphore_P( semKey, pid );
+
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
-        if( !b_error && *semKey >= 0 ){
-            if( devLine == IL_TERMINAL ) {
-                if( !subdevice ) {
-                    devreg->term.transm_command = command;
-                }
-                else {
-                    devreg->term.recv_command = command;
-                }
+    if( !b_error && *semKey >= 0 && !(b_error = semaphore_P( semKey, pid ) ) ) {
+        if( devLine == IL_TERMINAL ) {
+            if( !subdevice ) {
+                devreg->term.transm_command = command;
             }
             else {
-                devreg->dtp.command = command;
+                devreg->term.recv_command = command;
             }
+        }
+        else {
+            devreg->dtp.command = command;
         }
     }
     return b_error;

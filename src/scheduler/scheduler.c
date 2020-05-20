@@ -234,7 +234,7 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
      * e poi elimina il padre appena elaborato dallo stack per deallocarlo
      */
 	
-	if( !scheduler_RemoveProcessFromAnyQ( parent ) ){
+	if( scheduler_RemoveProcessFromAnyQ( parent ) ){
 		return -1;
 	}
 	list_add( &p->p_next, &pcb_stack );
