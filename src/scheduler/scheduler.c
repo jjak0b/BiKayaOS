@@ -276,7 +276,7 @@ int scheduler_RemoveProcess( pcb_t *p ) {
 }
 
 void scheduler_StartProcessChronometer() {
-	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+	pcb_t *p = scheduler->running_p;
 
 	if( p == NULL ) return;
 
@@ -290,7 +290,7 @@ void scheduler_StartProcessChronometer() {
 }
 
 void scheduler_UpdateProcessRunningTime( int b_isKernelTime ) {
-	pcb_t *p = scheduler->running_p; /* rende più leggibile il codice */
+	pcb_t *p = scheduler->running_p;
 
 	if( p == NULL ) return;
 

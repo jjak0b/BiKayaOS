@@ -75,12 +75,14 @@ int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wal
     /* prima viene effettuato il controllo validità puntatori */
     if ( user && kernel && wallclock ) {
         scheduler_UpdateProcessRunningTime( TRUE );
+
         pcb_t *p = scheduler_GetRunningProcess();
         if (p == NULL)
             return (-1);
+        
         *user = p->user_timelapse;
         *kernel = p->kernel_timelapse;
-        scheduler_StartProcessChronometer();
+        scheduler_StartProcessChronometer(); /* viene chiamata ora in modo da attribuire un tempo più preciso a wallclock */
         *wallclock = p->chrono_start_tod - p->first_activation_tod;
         return 0;
     }
@@ -90,21 +92,22 @@ int Sys1_GetCPUTime( unsigned int *user, unsigned int *kernel, unsigned int *wal
 
 int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_pid ) {
     /* prima di eseguire viene controllata la validità dei puntatori forniti */
-    if ( child_state != NULL ) {
-        pcb_t *child = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
+    if ( child_state && child_pid ) {
+        pcb_t *child = allocPcb();
+        /* ritorna 0 solo se c'era un PCB disponibile */
         if ( child != NULL ) {
             moveState( child_state, &child->p_s );
             child->priority = child_priority;
             child->original_priority = child_priority;
+            *child_pid = child;
+
             insertChild( scheduler_GetRunningProcess(), child );
             scheduler_AddProcess( child );
-            if( child_pid != NULL )
-                *child_pid = child;
-
             return 0;
         } 
     }
-    return -1;
+
+    return (-1);
 }
 
 int Sys3_TerminateProcess( pcb_t *pid ) {

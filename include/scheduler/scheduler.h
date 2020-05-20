@@ -170,8 +170,8 @@ void scheduler_StartProcessChronometer();
  * @brief   Aggiorna il tempo totale trascorso dall'ultima chiamata di scheduler_StartProcessChronometer fino a questa funzione.
  *          incrementando il timelapse kernel o user del processo in esecuzione ( se presente )
  * 
- * @param b_isKernelTime se FALSE il timelapse è aggiunto al tempo passato del processo (user)
- *                       altrimenti a quello passato nel kernel
+ * @param b_isKernelTime se FALSE il timelapse è aggiunto al tempo totale in user mode, altrimenti
+ *                       è aggiunto in kernel mode
  */
 void scheduler_UpdateProcessRunningTime( int b_isKernelTime );
 
