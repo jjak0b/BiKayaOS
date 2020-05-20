@@ -7,6 +7,7 @@ int semaphore_P( int *semkey, pcb_t * p ) {
     int b_error = 0;
     if( --(*semkey) < 0 ) {
         b_error = scheduler_StateToWaiting( p, semkey );
+        if( b_error ) ++(*semkey);
     }
     return b_error;
 }

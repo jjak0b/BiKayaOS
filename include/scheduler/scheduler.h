@@ -113,7 +113,7 @@ int scheduler_StateToWaiting( pcb_t* p, int* semKey );
  * @PreCondition Prima di chiamare questa funzione, è necessario chiamare scheduler_UpdateContext() per aggiornare il contesto del processo attuale
  * @PostCondition Dopo questo stato è necessario richiamare scheduler_schedule per procedere con la schedulazione dei processi
  * @return int 
- * 			* 1 se pid == NULL e non c'è alcun processo tracciato dallo scheduler in esecuzione
+ * 			* !=0 se pid == NULL o non c'è alcun processo tracciato dallo scheduler in esecuzione, o non è stato possibile trovare il processo in nessuna coda
  * 			* 0 altrimenti se è avvenuto tutto correttamente
  * @param pid identificatore del processo da terminare, se == NULL sarà considerato il processo attualmente in esecuzione
  * @param b_flag_terminate_progeny 	Se TRUE rimuove e dealloca dalla ready queue o dalla semd wait queue il descrittore del processo in esecuzione e tutta la sua progenie,
@@ -156,6 +156,7 @@ int scheduler_RemoveProcess( pcb_t *p );
  * @param p descrittore del processo da cui partire a rimuovere la progenie
  * @return int 
  * 			* 1 Se p == NULL
+ *          * -1 Se p non si trova in alcuna coda ( ready, wait queue, o processo corrente )
  * 			* 0 altrimenti
  */
 int scheduler_RemoveProgeny( pcb_t* p );
