@@ -32,6 +32,8 @@ void device_GetInfo( devreg_t *devreg, int *_line, int *_devNo ) {
 }
 
 int *device_GetSem( int devline, int devNo, int subDev ) {
+    if( ( devline < DEV_IL_START || devline >= N_INTERRUPT_LINES ) || ( devNo < 0 || devNo > N_DEV_PER_IL ) || subDev < 0 )
+        return NULL;
     return &_semdev[ GET_SEM_INDEX_SUBDEV(devline, devNo, subDev) ];
 }
 

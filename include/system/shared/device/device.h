@@ -59,7 +59,7 @@ void device_GetInfo( devreg_t *devreg, int *devline, int *devNo );
 
 /**
  * @brief Restituisce il puntatore al semaforo dedicato al (sotto-)dispositivo del tipo specificato
- * 
+ *        Restituisce NULL se i parametri non sono validi
  * @param devline 
  * @param devNo 
  * @param subDev 

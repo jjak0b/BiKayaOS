@@ -11,7 +11,7 @@
  * @param semkey 
  * @param p 
  * @return int 
- *         * 0 se è stato sospeso correttamente
+ *         * 0 se è l'operazione è avvenuta correttamente ( quindi anche se è stato sospeso )
  *         * !=0 se p == NULL e non c'è alcun processo in esecuzione, oppure se non è stato possibile allocare un semd per il processo specificato
  */
 int semaphore_P( int *semkey, pcb_t * p );

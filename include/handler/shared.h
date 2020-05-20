@@ -62,7 +62,20 @@ void Sys4_Verhogen( int* semaddr );
 
 void Sys5_Passeren( int* semaddr );
 
-void Sys6_DoIO( word command, word *devreg, int subdevice );
+/**
+ * @brief Invia il comando fornito al (sub)device fornito dai parametri
+ *        Se il (sub)device è libero manda il comando, altrimenti verrà mandato quando si libererà secondo un criterio FIFO
+ * 		  e mette in attesa il processo corrente sulla coda di attesa associata al device
+ *        
+ * @PostCondition Se non è stato possibile mettere il processo in attesa, allora non sarà inviato il comando restituendo errore
+ * @param command 
+ * @param devreg 
+ * @param subdevice 
+ * @return int 
+ *          0 se l'operazione è avvenuta correttamente ed il processo è in attesa della risposta del device
+ *       != 0 se non è stato possibile sospendere il processo, e quindi non è stato inviato il comando
+ */
+int Sys6_DoIO( word command, word *devreg, int subdevice );
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area );
 

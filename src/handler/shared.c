@@ -127,32 +127,32 @@ void Sys5_Passeren( int* semaddr ) {
     }
 }
 
-void Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
+int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
     devreg_t * devreg = (devreg_t*)devregAddr;
     int devLine, devNo;
     device_GetInfo( devreg, &devLine, &devNo );
 
     int *semKey = device_GetSem( devLine, devNo, subdevice );
+    int b_error = semKey == NULL;
     pcb_t *pid = scheduler_GetRunningProcess();
+    if( !b_error ) {
+        b_error = semaphore_P( semKey, pid );
     // un semaforo di un device è sempre almeno inizializzato a 0, e quindi è sempre sospeso
-    if( *semKey >= 0 ){
-        if( devLine == IL_TERMINAL ) {
-            if( !subdevice ) {
-                devreg->term.transm_command = command;
+        if( !b_error && *semKey >= 0 ){
+            if( devLine == IL_TERMINAL ) {
+                if( !subdevice ) {
+                    devreg->term.transm_command = command;
+                }
+                else {
+                    devreg->term.recv_command = command;
+                }
             }
             else {
-                devreg->term.recv_command = command;
+                devreg->dtp.command = command;
             }
         }
-        else {
-            devreg->dtp.command = command;
-        }
     }
-
-    int b_error = semaphore_P( semKey, pid );
-    if( b_error ) {
-        scheduler_StateToTerminate( pid, FALSE );
-    }
+    return b_error;
 }
 
 int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {
