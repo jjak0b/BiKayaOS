@@ -49,7 +49,7 @@ void scheduler_init() {
 
 	scheduler_struct.b_has_idle = FALSE;
 	pcb_t *idlePcb = &scheduler_struct.idlePcb;
-	pcb_init( idlePcb );
+	pcb_init( idlePcb, TRUE );
 	idlePcb->original_priority = DEFAULT_PRIORITY;
 	idlePcb->priority = idlePcb->original_priority;
 	SetStatus( &idlePcb->p_s, STATUS_NULL);
@@ -262,10 +262,6 @@ int scheduler_RemoveProgeny( pcb_t* p ) {
 
 pcb_t *scheduler_GetRunningProcess() {
 	return scheduler->running_p;
-}
-
-scheduler_t *scheduler_Get() {
-	return scheduler;
 }
 
 void scheduler_AddProcess( pcb_t *p ) {

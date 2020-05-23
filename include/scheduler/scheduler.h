@@ -129,8 +129,6 @@ int scheduler_StateToTerminate( pcb_t* pid, int b_flag_terminate_progeny );
  */
 pcb_t *scheduler_GetRunningProcess();
 
-scheduler_t *scheduler_Get();
-
 /**
  * @brief Inserisce un descrittore di processo nella ready queue
  * @PreCondition Da utilizzare solo se p non è presente nella ready queue

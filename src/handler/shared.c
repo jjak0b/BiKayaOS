@@ -23,6 +23,7 @@
 #include <scheduler/scheduler.h>
 #include <asl/asl.h>
 #include <pcb/pcb.h>
+#include <pcb/utils.h>
 #include <system/shared/device/device.h>
 #include <utilities/semaphore.h>
 #include <shared/device/terminal.h>
@@ -43,10 +44,12 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             *returnValue = (int) Sys3_TerminateProcess( (pcb_t*) param1 );
             break;
         case VERHOGEN:
-            Sys4_Verhogen( (int*)param1 );
+            b_hasReturnValue = TRUE;
+            *returnValue = (int) Sys4_Verhogen( (int*)param1 );
             break;
         case PASSEREN:
-            Sys5_Passeren( (int*)param1 );
+            b_hasReturnValue = TRUE;
+            *returnValue = (int) Sys5_Passeren( (int*)param1 );
             break;
         case WAITIO:
             b_hasReturnValue = TRUE;
@@ -54,7 +57,7 @@ word Syscaller( state_t *state, word sysNo, word param1, word param2, word param
             break;
         case SPECPASSUP:
             b_hasReturnValue = TRUE;
-            *returnValue = (int) Sys7_SpecPassup( state, (int)param1, (state_t*)param2, (state_t*)param3 );
+            *returnValue = (int) Sys7_SpecPassup( (int)param1, (state_t*)param2, (state_t*)param3 );
             break;
         case GETPID:
             Sys8_GetPID( (pcb_t**)param1, (pcb_t**)param2 );
@@ -94,6 +97,7 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
     if ( child_state != NULL ) {
         pcb_t *child = allocPcb(); /* il puntatore sarà nullo in caso non vi siano PCB disponibili */
         if ( child != NULL ) {
+            pcb_init( child, FALSE );
             moveState( child_state, &child->p_s );
             child->priority = child_priority;
             child->original_priority = child_priority;
@@ -113,19 +117,25 @@ int Sys3_TerminateProcess( pcb_t *pid ) {
     return ( b_error ? -1 : 0 );
 }
 
-void Sys4_Verhogen( int* semaddr ) {
-    semaphore_V( semaddr );
-    /* dovremmo ripristinare la priorità ? */
+int Sys4_Verhogen( int* semaddr ) {
+    int status = -1;
+    if( semaddr != NULL ){
+        semaphore_V( semaddr );
+        status = 0;
+    }
+    return status;
 }
 
-void Sys5_Passeren( int* semaddr ) {
+int Sys5_Passeren( int* semaddr ) {
     pcb_t *pid = scheduler_GetRunningProcess();
-    int status = semaphore_P( semaddr, pid );
-    // nel caso ritornasse 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
-    // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
-    if( status == 1 ) {
-        scheduler_StateToTerminate( pid, FALSE );
+    int status = -1;
+    if( semaddr != NULL ){
+       status = semaphore_P( semaddr, pid );
     }
+    // il caso semaphore_P ritorni 1 non può accadere perchè ad ogni processo può essere nella ASL al massimo 1 volta
+    // infatti se non fosse disponibile un semd, non esisterebbe neanche questo processo
+
+    return (status ? -1 : 0 );
 }
 
 int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
@@ -151,10 +161,10 @@ int Sys6_DoIO( word command, word *devregAddr, int subdevice ) {
             devreg->dtp.command = command;
         }
     }
-    return b_error;
+    return ( b_error ? -1 : 0 );
 }
 
-int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area ) {
+int Sys7_SpecPassup( int type, state_t *old_area, state_t *new_area ) {
     pcb_t* p = scheduler_GetRunningProcess();
     if( p != NULL && (0 <= type && type < 3) ) {
         if( p->specPassup[ type ][ SYS_SPECPASSUP_AREA_NEW ] == NULL ) {
@@ -170,7 +180,6 @@ int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *n
 }
 
 void Sys8_GetPID( pcb_t **pid, pcb_t **ppid ) {
-    /* la procedura ritorna errore in caso di puntatori non validi */
     pcb_t *p = scheduler_GetRunningProcess();
     if ( pid != NULL )
         *pid = p;

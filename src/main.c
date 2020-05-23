@@ -28,7 +28,7 @@
 #include <system/shared/device/device.h>
 
 int main(){
-	//---------------------Inizialializzazione del sistema
+	//---------------------Inizializzazione del sistema
 	initAreas();
 	initPcbs();
 	initASL();

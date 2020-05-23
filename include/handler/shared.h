@@ -3,10 +3,11 @@
 
 #include <system/system.h>
 
-#define SYSNO2INDEX( n )( (n)-1 )
-
+/* Macro per utilizzo specpassup */
+/* colonna matrice specpassup nel pcb */
 #define SYS_SPECPASSUP_AREA_OLD 0
 #define SYS_SPECPASSUP_AREA_NEW 1
+/* riga matrice specpassup nel pcb */
 #define SYS_SPECPASSUP_TYPE_SYSBK 0
 #define SYS_SPECPASSUP_TYPE_TLB 1
 #define SYS_SPECPASSUP_TYPE_PGMTRAP 2
@@ -52,15 +53,32 @@ int Sys2_CreateProcess( state_t *child_state, int child_priority, pcb_t **child_
 /**
  * @brief Implementazione della syscall TERMINATE_PROCESS.
  * Termina il processo corrente e tutta la sua progenie.
- * Infine, richiama lo scheduler.
  * @param pid 
  * @return int 
  */
 int Sys3_TerminateProcess( pcb_t *pid );
 
-void Sys4_Verhogen( int* semaddr );
+/**
+ * @brief Incrementa il valore del semaforo, se il suo valore diventa <= 0, allora il primo processo in coda
+ *        associato al semaforo specificato è risvegliato; cioè aggiunto alla ready queue
+ * 
+ * @param semaddr 
+ * @return int
+ *         * 0 se l'operazione è stata effettuata correttamente
+ *         * -1 altrimenti ( semaddr == NULL )
+ */
+int Sys4_Verhogen( int* semaddr );
 
-void Sys5_Passeren( int* semaddr );
+/**
+ * @brief Decrementa il valore del semaforo, se diventa < 0, allora il processo corrente viene sospeso;
+ *        cioè rimosso dalla ready queue dello scheduler e posto in attesa sulla coda del semaforo specificato
+ * @param semkey 
+ * @param p 
+ * @return int 
+ *         * 0 se è l'operazione è avvenuta correttamente ( quindi anche se è stato sospeso )
+ *         * -1 se p == NULL ( oppure se non è stato possibile allocare un semd per il processo specificato, ma non si può mai verificare perchè i semd sono quanti i pcb, ma la si annota per future revisioni )
+ */
+int Sys5_Passeren( int* semaddr );
 
 /**
  * @brief Invia il comando fornito al (sub)device fornito dai parametri
@@ -72,12 +90,23 @@ void Sys5_Passeren( int* semaddr );
  * @param devreg 
  * @param subdevice 
  * @return int 
- *          0 se l'operazione è avvenuta correttamente ed il processo è in attesa della risposta del device
- *       != 0 se non è stato possibile sospendere il processo, e quindi non è stato inviato il comando
+ *         * 0 se l'operazione è avvenuta correttamente ed il processo è in attesa della risposta del device
+ *         * -1 se non è stato possibile mettere il processo in attesa, e quindi non è stato inviato il comando
  */
 int Sys6_DoIO( word command, word *devreg, int subdevice );
 
-int Sys7_SpecPassup( state_t* currState, int type, state_t *old_area, state_t *new_area );
+/**
+ * @brief registra gli indirizzi delle rispettive new e old area dei gestori di livello superiore del tipo specificato sul processo corrente
+ * 
+ * @PostCondition se è già stato definito in precedenza un gestore dello stesso tipo, termina il processo corrente e tutta la sua progenie
+ * @param type tipo dell gestore ( SYS_SPECPASSUP_TYPE_SYSBK 0; SYS_SPECPASSUP_TYPE_TLB 1; SYS_SPECPASSUP_TYPE_PGMTRAP 2 )
+ * @param old_area area in cui verrà memorizzato lo stato del processo quando causerà l'eccezione
+ * @param new_area area che verrà caricata sul processore al verificarsi dell'eccezione del tipo fornito
+ * @return int 
+ *         * 0 se l'operazione è avvenuta correttamente
+ *         * -1 altrimenti
+ */
+int Sys7_SpecPassup( int type, state_t *old_area, state_t *new_area );
 
 /**
  * @brief assegna pid il puntatore al processo corrente, a ppid il puntatore al processo genitore
